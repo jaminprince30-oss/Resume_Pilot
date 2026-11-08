@@ -47,6 +47,18 @@ Do not put the real key in `public/index.html`, GitHub, or `netlify.toml`. Netli
 
 Netlify docs: https://docs.netlify.com/build/functions/environment-variables/
 
+## Secrets scanning
+
+Secrets scanning remains enabled. `netlify.toml` excludes only
+`OPENROUTER_MODEL` from environment-value scanning because it is a public model
+identifier that also appears in the source and documentation. The API key is
+still scanned and must stay in Netlify environment variables. Local `.env`
+files are ignored; keep `.env.example` limited to placeholders.
+
+If a future scan reports an API key, remove the exposed value and revoke or
+rotate it with OpenRouter before updating the Netlify environment variable.
+Do not disable scanning or exempt the API key.
+
 ## Test the deployed site
 
 1. Open the Netlify site URL.
