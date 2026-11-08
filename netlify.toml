@@ -2,5 +2,11 @@
   publish = "public"
   functions = "netlify/functions"
 
+[build.environment]
+  # OPENROUTER_MODEL holds a public model name (e.g. "openrouter/free") that also
+  # appears in the README and as a code default, so it is not a secret.
+  # OPENROUTER_API_KEY remains fully covered by secrets scanning.
+  SECRETS_SCAN_OMIT_KEYS = "OPENROUTER_MODEL"
+
 [functions]
   node_bundler = "esbuild"
