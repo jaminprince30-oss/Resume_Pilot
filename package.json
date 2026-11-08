@@ -1,0 +1,6 @@
+{
+  "name": "resumepilot-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ResumePilot ATS resume builder with OpenRouter AI on Netlify"
+}
