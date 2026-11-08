@@ -142,6 +142,12 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
 .toast{position:fixed;bottom:20px;right:20px;background:#17233d;color:#fff;padding:11px 15px;border-radius:10px;box-shadow:var(--shadow);font-size:12px;z-index:20;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}
 .toast.show{opacity:1;transform:translateY(0)}
 .hidden{display:none!important}
+.dl-group{display:inline-flex;align-items:stretch;gap:6px}
+.dl-group.wide{display:flex;width:100%;margin-top:10px}
+.dl-group.wide .btn{flex:1}
+.dl-format{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:0 8px;font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+.download-box{margin-top:15px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fbfcff}
+.download-box strong{font-size:13px}.download-box p{margin:4px 0 0;font-size:11px;color:#6b7690}
 @media(max-width:1100px){.workspace{grid-template-columns:1fr}.preview-wrap{position:static}.checker-grid{grid-template-columns:1fr}.score-panel{display:grid;grid-template-columns:1fr 1fr;gap:16px}.score-panel .score-card{grid-column:1/-1}}
 @media(max-width:760px){
  .app{display:block}.sidebar{padding:12px 14px;gap:12px;position:sticky;top:0;z-index:10}.brand{padding:0 3px}.brand-mark{width:32px;height:32px}.brand-name{font-size:15px}.brand-sub{display:none}.sidebar .nav-label,.side-note{display:none}.nav{display:flex;gap:6px}.nav button{flex:1;justify-content:center;padding:9px 7px;font-size:11px}.nav-icon{width:auto}.topbar{height:55px;padding:0 16px}.top-sub,.local-pill{display:none}.content{padding:22px 14px 42px}.hero{display:block}.hero-actions{margin-top:15px}.hero h1{font-size:23px}.panel-body{padding:15px}.panel-head{padding:15px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.entry-fields{grid-template-columns:1fr}.entry-fields .full{grid-column:auto}.resume-paper{padding:25px 21px;min-height:520px}.preview-wrap{margin-top:0}.score-panel{display:block}.score-card{margin-bottom:12px}.checker-grid{gap:14px}.dropzone{padding:20px 14px}.tabbar{padding:0 14px}
@@ -182,7 +188,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
     <section class="content" id="builder-page">
       <div class="hero">
         <div><div class="eyebrow">Resume workspace</div><h1>Build a resume that gets read.</h1><p>Add your details and see a clean, ATS-friendly resume take shape as you type. Keep everything factual—no made-up experience or skills.</p></div>
-        <div class="hero-actions"><button class="btn" id="sample-btn">↻ Load example</button><button class="btn soft" id="ai-builder-btn">✦ AI generate / polish</button><button class="btn primary" id="print-btn">⇩ Export / Print PDF</button></div>
+        <div class="hero-actions"><button class="btn" id="sample-btn">↻ Load example</button><button class="btn soft" id="ai-builder-btn">✦ AI generate / polish</button><div class="dl-group"><select class="dl-format" id="builder-export-format" aria-label="Resume export format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn primary" id="builder-export">⇩ Export</button></div></div>
       </div>
 
       <div class="workspace">
@@ -234,12 +240,12 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
 
         <section class="preview-wrap">
           <div class="panel">
-            <div class="panel-head"><div><h2>Resume preview</h2><p>Simple, single-column layout</p></div><button class="btn small soft" id="download-txt">Download .txt</button></div>
+            <div class="panel-head"><div><h2>Resume preview</h2><p>Simple, single-column layout</p></div><div class="dl-group"><select class="dl-format" id="preview-format" aria-label="Resume preview download format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn small soft" id="preview-download">⇩ Download</button></div></div>
             <div class="resume-paper" id="resume-preview">
               <div class="empty-preview"><div class="empty-icon">▤</div><strong>Your resume preview will appear here</strong><p>Add your name and details to get started.</p></div>
             </div>
           </div>
-          <p class="disclaimer">The preview uses a text-first format with standard headings. For a PDF, choose “Export / Print PDF” and select “Save as PDF” in your browser’s print dialog.</p>
+          <p class="disclaimer">Choose PDF, DOCX or TXT from the export or preview download menu to save your resume in a simple, single-column layout.</p>
           <section class="panel ai-output-panel hidden" id="builder-ai-panel">
             <div class="panel-head"><div><h2>AI-generated resume</h2><p id="builder-ai-meta">Generated using OpenRouter free models</p></div><span class="ai-tag">OPENROUTER · FREE</span></div>
             <div class="panel-body"><pre id="builder-ai-output"></pre><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="builder-ai-copy">Copy text</button><button class="btn small primary" id="builder-ai-download">Download .txt</button></div><p class="disclaimer">Review every statement before using it. AI must not add qualifications, skills, dates, employers or achievements that you did not provide.</p></div>
@@ -272,12 +278,12 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
           </section>
 
           <section class="panel optimized" id="optimized-panel">
-            <div class="panel-head"><div><h2>3. ATS-friendly version</h2><p>Reformatted using standard headings and plain text.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn small" id="copy-optimized">Copy</button><button class="btn small primary" id="download-optimized">Download .txt</button></div></div>
+            <div class="panel-head"><div><h2>3. ATS-friendly version</h2><p>Reformatted using standard headings and plain text.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn small" id="copy-optimized">Copy</button><div class="dl-group"><select class="dl-format" id="optimized-format" aria-label="Download format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn small primary" id="download-optimized">⇩ Download</button></div></div></div>
             <div class="panel-body"><pre id="optimized-text"></pre><p class="disclaimer">This step reorganizes and normalizes the text; it does not invent achievements, add qualifications, or guarantee a particular ATS result. Review every line before using it.</p></div>
           </section>
           <section class="panel optimized ai-output-panel" id="ai-check-panel">
             <div class="panel-head"><div><h2>AI review & improved resume</h2><p id="ai-check-meta">Personalized suggestions and a rewritten ATS-friendly version.</p></div><span class="ai-tag">OPENROUTER · FREE</span></div>
-            <div class="panel-body"><pre id="ai-check-output"></pre><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="ai-check-copy">Copy text</button><button class="btn small primary" id="ai-check-download">Download .txt</button></div><p class="disclaimer">AI output is a draft, not a guarantee of ATS acceptance. Verify all facts, keywords and claims before applying.</p></div>
+            <div class="panel-body"><pre id="ai-check-output"></pre><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="ai-check-copy">Copy text</button><div class="dl-group"><select class="dl-format" id="ai-check-format" aria-label="Download format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn small primary" id="ai-check-download">⇩ Download</button></div></div><p class="disclaimer">AI output is a draft, not a guarantee of ATS acceptance. Verify all facts, keywords and claims before applying.</p></div>
           </section>
         </div>
 
@@ -297,6 +303,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
               <div class="tip-box"><strong>What this score means</strong><br>This is a practical checklist estimate—not a score from an employer’s ATS. Different systems parse documents differently.</div>
               <button class="btn primary" id="optimize-btn" style="width:100%;margin-top:15px">Make formatting ATS-friendly →</button>
               <button class="btn soft" id="ai-check-btn" style="width:100%;margin-top:8px">✦ AI review & improve resume</button>
+              <div class="download-box"><strong>Download ATS-friendly resume</strong><p>Choose a format for the cleaned-up version of your resume.</p><div class="dl-group wide"><select class="dl-format" id="checker-format" aria-label="Download format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn primary" id="checker-download">⇩ Download</button></div></div>
             </div>
           </section>
           <div class="tip-box"><strong>Good ATS habits</strong><br>Use one column, standard section names, readable fonts, consistent dates and simple bullets. Avoid tables, text boxes, icons, graphics and important details in headers or footers.</div>
@@ -414,8 +421,13 @@ function resumeAsText(){
 function downloadFile(filename,content,type="text/plain"){
   const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
 }
-$("download-txt").addEventListener("click",()=>{const text=resumeAsText();if(!text.trim()){toast("Add some resume details first.");return}downloadFile("resume-ats-friendly.txt",text);});
-$("print-btn").addEventListener("click",()=>{if(!state.fullName&&!state.summary&&!state.experience.length){toast("Add some resume details first.");return}window.print()});
+function downloadBuilderResume(formatId,button){
+  const text=resumeAsText();
+  if(!text.trim()){toast("Add some resume details first.");return}
+  return downloadResume("resume-ats-friendly",text,$(formatId).value,button);
+}
+$("preview-download").addEventListener("click",e=>downloadBuilderResume("preview-format",e.currentTarget));
+$("builder-export").addEventListener("click",e=>downloadBuilderResume("builder-export-format",e.currentTarget));
 $("sample-btn").addEventListener("click",()=>{
   Object.assign(state,{fullName:"Jordan Lee",targetTitle:"Junior Data Analyst",email:"jordan.lee@email.com",phone:"+1 555 010 2468",location:"Austin, TX",linkedin:"linkedin.com/in/jordanlee",portfolio:"github.com/jordanlee",summary:"Entry-level data analyst with project experience using Python, SQL and Excel to clean datasets, explore trends and communicate findings. Interested in turning business questions into clear, actionable analysis.",skills:"Python, SQL, Excel, Power BI, data cleaning, data visualization, statistical analysis, communication",certifications:"Google Data Analytics Professional Certificate — Google — 2025",achievements:"Volunteer data coordinator, Campus Sustainability Club"});
   state.experience=[{role:"Data Intern",company:"Northstar Retail (Example)",location:"Austin, TX",dates:"Jun 2025 – Aug 2025",bullets:"Cleaned and validated weekly sales data using Excel and SQL.\nBuilt recurring reports for the operations team and documented data definitions."}];
@@ -556,7 +568,80 @@ $("optimize-btn").addEventListener("click",()=>{
   state.optimizedText=optimizeText(text);$("optimized-text").textContent=state.optimizedText;$("optimized-panel").classList.add("show");$("optimized-panel").scrollIntoView({behavior:"smooth",block:"start"});
 });
 $("copy-optimized").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(state.optimizedText);toast("Optimized text copied.")}catch(e){toast("Copy unavailable in this browser. Select the text to copy.")}});
-$("download-optimized").addEventListener("click",()=>{if(state.optimizedText)downloadFile("ats-friendly-resume.txt",state.optimizedText)});
+/* Multi-format resume export (PDF, DOCX, TXT) — generated locally in the browser */
+function cleanExportLines(text){
+  return text.replace(/\r/g,"").split("\n").map(l=>l.replace(/\*\*(.+?)\*\*/g,"$1").replace(/__(.+?)__/g,"$1").replace(/\s+$/,""));
+}
+function exportLineKind(line,index){
+  const t=line.trim();
+  if(!t)return "blank";
+  if(/^#{1,6}\s+/.test(t))return "heading";
+  if(/^[-•●▪◦*]\s+/.test(t))return "bullet";
+  if(index===0)return "title";
+  if(t.length<=45&&/[A-Z]/.test(t)&&t===t.toUpperCase()&&!/[@]/.test(t))return "heading";
+  if(canonicalSection(t))return "heading";
+  return "text";
+}
+function exportStructure(text){
+  const lines=cleanExportLines(text);while(lines.length&&!lines[0].trim())lines.shift();
+  return lines.map((l,i)=>{const kind=exportLineKind(l,i);let t=l.trim();if(kind==="heading")t=t.replace(/^#{1,6}\s+/,"").replace(/:$/,"");if(kind==="bullet")t=t.replace(/^[-•●▪◦*]\s+/,"");return {kind,text:t}});
+}
+function pdfSafe(s){
+  return s.replace(/[‘’‛]/g,"'").replace(/[“”]/g,'"').replace(/[–—−]/g,"-").replace(/[•●▪◦➤]/g,"-").replace(/…/g,"...").replace(/ /g," ").replace(/[^\x09\x0A\x0D\x20-\x7E -ÿ]/g,"");
+}
+async function exportPdf(filename,text){
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js","jspdf");
+  const doc=new window.jspdf.jsPDF({unit:"pt",format:"letter"});
+  const margin=54,pageW=doc.internal.pageSize.getWidth(),pageH=doc.internal.pageSize.getHeight(),maxW=pageW-margin*2;let y=margin;
+  const ensure=h=>{if(y+h>pageH-margin){doc.addPage();y=margin}};
+  exportStructure(text).forEach(b=>{
+    const t=pdfSafe(b.text);
+    if(b.kind==="blank"){y+=6;return}
+    if(b.kind==="title"){doc.setFont("helvetica","bold");doc.setFontSize(17);const w=doc.splitTextToSize(t,maxW);ensure(w.length*20);doc.text(w,margin,y+12);y+=w.length*20+2;return}
+    if(b.kind==="heading"){y+=6;ensure(24);doc.setFont("helvetica","bold");doc.setFontSize(11.5);doc.text(t.toUpperCase(),margin,y+10);y+=15;doc.setDrawColor(170);doc.setLineWidth(.6);doc.line(margin,y,pageW-margin,y);y+=8;return}
+    doc.setFont("helvetica","normal");doc.setFontSize(10.5);
+    const indent=b.kind==="bullet"?14:0;const w=doc.splitTextToSize(t,maxW-indent);
+    w.forEach((line,i)=>{ensure(14);if(b.kind==="bullet"&&i===0)doc.text("-",margin+2,y+9);doc.text(line,margin+indent,y+9);y+=14});
+    y+=1;
+  });
+  doc.save(filename);
+}
+function xmlEsc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"")}
+async function exportDocx(filename,text){
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js","JSZip");
+  const run=(t,{bold=false,size=21}={})=>`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>${bold?"<w:b/>":""}<w:sz w:val="${size}"/></w:rPr><w:t xml:space="preserve">${xmlEsc(t)}</w:t></w:r>`;
+  const body=exportStructure(text).map(b=>{
+    if(b.kind==="blank")return "";
+    if(b.kind==="title")return `<w:p><w:pPr><w:spacing w:after="60"/></w:pPr>${run(b.text,{bold:true,size:34})}</w:p>`;
+    if(b.kind==="heading")return `<w:p><w:pPr><w:keepNext/><w:spacing w:before="220" w:after="80"/><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="999999"/></w:pBdr></w:pPr>${run(b.text.toUpperCase(),{bold:true,size:23})}</w:p>`;
+    if(b.kind==="bullet")return `<w:p><w:pPr><w:spacing w:after="40"/><w:ind w:left="360" w:hanging="220"/></w:pPr>${run("•\t")}${run(b.text)}</w:p>`;
+    return `<w:p><w:pPr><w:spacing w:after="60"/></w:pPr>${run(b.text)}</w:p>`;
+  }).join("");
+  const zip=new window.JSZip();
+  zip.file("[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+  zip.file("_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  zip.file("word/document.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>`);
+  const blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function downloadResume(baseName,text,format,button){
+  if(!text||!text.trim()){toast("Nothing to download yet.");return}
+  setButtonBusy(button,true,"Preparing…");
+  try{
+    if(format==="pdf")await exportPdf(baseName+".pdf",text);
+    else if(format==="docx")await exportDocx(baseName+".docx",text);
+    else downloadFile(baseName+".txt",text);
+    toast("Downloaded "+baseName+"."+format);
+  }catch(e){toast(e.message||"Could not create the file. Try TXT instead.")}
+  finally{setButtonBusy(button,false)}
+}
+$("download-optimized").addEventListener("click",e=>downloadResume("ats-friendly-resume",state.optimizedText,$("optimized-format").value,e.currentTarget));
+$("checker-download").addEventListener("click",e=>{
+  const text=state.lastResumeText||$("resume-text").value;
+  if(!text.trim()){toast("Run the ATS check with resume text first.");return}
+  state.optimizedText=optimizeText(text);
+  downloadResume("ats-friendly-resume",state.optimizedText,$("checker-format").value,e.currentTarget);
+});
 
 /* OpenRouter AI integration: the API key is kept server-side in OPENROUTER_API_KEY. */
 async function callResumeAI(mode, resumeText, jobDescription=""){
@@ -619,9 +704,7 @@ $("ai-check-copy").addEventListener("click",async()=>{
   try{await navigator.clipboard.writeText($("ai-check-output").textContent);toast("AI review copied.")}
   catch(e){toast("Clipboard unavailable. Select the text to copy.")}
 });
-$("ai-check-download").addEventListener("click",()=>{
-  const text=$("ai-check-output").textContent;if(text)downloadFile("ai-resume-review-and-improvement.txt",text);
-});
+$("ai-check-download").addEventListener("click",e=>downloadResume("ai-resume-review-and-improvement",$("ai-check-output").textContent,$("ai-check-format").value,e.currentTarget));
 
 /* initial blank entries and preview */
 addEntry("experience");addEntry("education");addEntry("projects");renderPreview();
