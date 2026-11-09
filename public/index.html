@@ -302,6 +302,23 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
               <p class="disclaimer">AI output is a draft, not a guarantee of ATS acceptance. Verify all facts, keywords and claims before applying.</p>
             </div>
           </section>
+
+          <section class="panel" id="final-download-panel">
+            <div class="panel-head">
+              <div>
+                <h2>Download your final resume</h2>
+                <p>Download the AI-reviewed, improved and ATS-formatted resume.</p>
+              </div>
+              <div class="dl-group">
+                <select class="dl-format" id="final-download-format" aria-label="Final resume format">
+                  <option value="pdf">PDF</option>
+                  <option value="docx">DOCX</option>
+                  <option value="txt">TXT</option>
+                </select>
+                <button class="btn primary" id="final-download-btn">⇩ Download</button>
+              </div>
+            </div>
+          </section>
         </div>
 
         <aside class="score-panel">
@@ -914,6 +931,12 @@ $("ai-check-btn").addEventListener("click",async()=>{
 $("ai-check-copy").addEventListener("click",async()=>{
   try{await navigator.clipboard.writeText($("ai-check-output").textContent);toast("Final improved resume copied.")}
   catch(e){toast("Clipboard unavailable. Select the text to copy.")}
+});
+$("final-download-btn").addEventListener("click",async e=>{
+  const text=cleanResumeForExport($("ai-check-output").textContent.trim()||state.optimizedText||"");
+  if(!text){toast("Run AI Review • Improve • ATS Format first.");return}
+  state.optimizedText=text;
+  downloadResume("resumepilot-final-resume",text,$("final-download-format").value,e.currentTarget);
 });
 
 
