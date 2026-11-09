@@ -670,7 +670,7 @@ async function callResumeAI(mode, resumeText, jobDescription=""){
   const consent=window.confirm("This sends the resume text"+(jobDescription.trim()?" and job description":"")+" to OpenRouter and its selected AI provider for processing. Continue?");
   if(!consent)return null;
   try{
-    const response=await fetch("/.netlify/functions/ai",{
+    const response=await fetch("/api/ai",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({mode,resumeText,jobDescription})
