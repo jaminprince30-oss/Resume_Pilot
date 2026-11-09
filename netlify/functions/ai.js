@@ -94,9 +94,41 @@ function sanitizeResumeOutput(text) {
     }
   }
 
-  // Free models may append a duplicate "RESUME DETAILS" block after the real resume.
-  // Treat that marker as generated duplicate content, not as a resume section.
-  raw = raw.replace(/\n\s*RESUME DETAILS\s*\n[\s\S]*$/i, "").trim();
+  // Remove model-added wrapper/meta sections that can appear after the real resume.
+  // These are not candidate resume content.
+  raw = raw.replace(/\n\s*(?:RESUME DETAILS|RESUME INFORMATION|END OF RESUME)\s*\n[\s\S]*$/i, "").trim();
+
+  // If the model repeats the same achievements/certifications block at the end,
+  // keep the first occurrence and remove the later exact/near-exact repetition.
+  const resumeLines = raw.split("\n").map(line => line.trim()).filter(Boolean);
+  const seenBlocks = new Map();
+  for (let n = 5; n <= 12; n++) {
+    for (let start = 0; start + n <= resumeLines.length; start++) {
+      const block = resumeLines.slice(start, start + n).join(" ").replace(/\s+/g, " ").toLowerCase();
+      if (block.length < 120) continue;
+      if (seenBlocks.has(block)) {
+        const previousStart = seenBlocks.get(block);
+        const laterText = resumeLines.slice(start).join("\n");
+        const earlierText = resumeLines.slice(previousStart, start).join("\n");
+        if (laterText.length <= earlierText.length * 1.35 || start > previousStart) {
+          const laterRawStart = raw.indexOf(resumeLines[start]);
+          if (laterRawStart >= 0) {
+            raw = raw.slice(0, laterRawStart).trim();
+          }
+        }
+        break;
+      }
+      seenBlocks.set(block, start);
+    }
+    if (resumeLines.length !== raw.split("\n").map(line => line.trim()).filter(Boolean).length) break;
+  }
+
+  // Remove common export artifacts accidentally emitted by the model.
+  raw = raw
+    .replace(/\s+\|\s+/g, " | ")
+    .replace(/,\s*([A-Z])/g, ", $1")
+    .replace(/\n\s*\|\s*/g, "\n")
+    .trim();
 
   // Remove repeated standard section blocks by keeping the final occurrence.
   // This is deliberately limited to common headings to avoid deleting valid text.
