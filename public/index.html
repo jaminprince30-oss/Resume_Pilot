@@ -484,6 +484,24 @@ function repairPdfSplitWords(text){
   return String(text||"").replace(/[ \t]{2,}/g," ");
 }
 
+function pdfItemsToLines(items){
+  // Rebuild real lines from pdf.js text items (grouped by vertical position)
+  // so headings, bullets and contact details are not squashed into one line.
+  const lines=[];let cur=null,prev=null;
+  for(const it of items){
+    if(typeof it.str!=="string")continue;
+    const y=it.transform?it.transform[5]:0,x=it.transform?it.transform[4]:0,h=Math.abs(it.height)||10;
+    if(!cur||Math.abs(y-cur.y)>h*0.5){cur={y,text:""};lines.push(cur);prev=null}
+    if(prev){
+      const gap=x-(prev.x+(prev.w||0));
+      if(gap>h*0.12&&!/\s$/.test(cur.text)&&!/^\s/.test(it.str))cur.text+=" ";
+    }
+    cur.text+=it.str;
+    prev={x,w:it.width||0};
+    if(it.hasEOL){cur=null;prev=null}
+  }
+  return lines.map(l=>repairPdfSplitWords(l.text).trim()).filter(Boolean).join("\n");
+}
 async function extractFile(file){
   if(!file)throw new Error("No file was selected.");
   const name=String(file.name||"").toLowerCase();
@@ -503,7 +521,7 @@ async function extractFile(file){
     for(let i=1;i<=pdf.numPages;i++){
       const page=await pdf.getPage(i);
       const content=await page.getTextContent();
-      pages.push(repairPdfSplitWords(content.items.map(x=>x.str).join(" ")));
+      pages.push(pdfItemsToLines(content.items));
     }
     const text=pages.join("\n\n").trim();
     if(!text)throw new Error("The PDF contains no selectable text. Try copying and pasting the resume text.");
@@ -612,7 +630,7 @@ function canonicalSection(line){
   if(/^(professional )?(summary|profile|objective|career objective)$/.test(s))return "Professional Summary";
   if(/^(professional )?(work )?experience$|^(employment|work) history$|^internship(s)?$/.test(s))return "Work Experience";
   if(/^(education|academic background|qualifications)$/.test(s))return "Education";
-  if(/^(technical )?(core )?skills|^competencies$/.test(s))return "Skills";
+  if(/^((technical|core|key) )?(skills|competencies)( (&|and) tools)?$/.test(s))return "Skills";
   if(/^(academic )?projects$|^selected projects$/.test(s))return "Projects";
   if(/^(certifications|certificates|licenses)$/.test(s))return "Certifications";
   if(/^(achievements(?: & activities)?|awards|activities|leadership|volunteering)$/.test(s))return "Achievements & Activities";
@@ -667,14 +685,23 @@ function optimizeText(raw){
       continue;
     }
     if(!current){header.push(line);continue}
-    sections[current].push(line.replace(/^[•●▪◦➤*-]\s*/,"- "));
+    const item=line.replace(/^[•●▪◦➤*-]\s*/,"- ");
+    const list=sections[current];
+    // A line starting in lowercase continues the previous (wrapped) line.
+    if(list.length&&!/^- /.test(item)&&/^[a-z]/.test(item)&&!/^(https?:|www\.)|^[\w.-]+\.(com|io|org|net|dev|ai|in)\b|@/i.test(item))list[list.length-1]+=" "+item;
+    else list.push(item);
   }
+  if(sections["Professional Summary"])sections["Professional Summary"]=[sections["Professional Summary"].join(" ")];
   const out=[];
   if(header.length){
     out.push(header[0].toUpperCase());
-    if(header.length>1)out.push(header.slice(1).join(" | "));
+    const isContact=l=>/@|https?:|www\.|linkedin\.|github\.|\+?\d[\d\s().-]{7,}\d/i.test(l);
+    const titles=header.slice(1).filter(l=>!isContact(l));
+    const contacts=header.slice(1).filter(isContact);
+    titles.forEach(t=>out.push(t));
+    if(contacts.length)out.push(contacts.join(" | "));
   }
-  const preferred=["Professional Summary","Skills","Work Experience","Projects","Education","Certifications","Achievements & Activities"];
+  const preferred=["Professional Summary","Skills","Work Experience","Education","Projects","Certifications","Achievements & Activities"];
   const arranged=[...preferred.filter(x=>sections[x]),...order.filter(x=>!preferred.includes(x))];
   arranged.forEach(name=>{
     const body=sections[name].map(line=>{
