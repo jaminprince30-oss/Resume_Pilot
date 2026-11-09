@@ -25,7 +25,6 @@ export async function onRequestPost(context) {
   });
 }
 
-}
 
 function cleanText(value) {
   return String(value || "")
