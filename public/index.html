@@ -559,18 +559,48 @@ function canonicalSection(line){
   if(/^(publications|research|additional information)$/.test(s))return s.replace(/\b\w/g,c=>c.toUpperCase());
   return null;
 }
+function splitEmbeddedResumeHeadings(text){
+  let raw=String(text||"").replace(/\r/g,"").replace(/\uFEFF/g,"").trim();
+  if(!raw)return "";
+  const headings=[
+    "PROFESSIONAL SUMMARY","SKILLS","TECHNICAL SKILLS","WORK EXPERIENCE",
+    "PROJECTS","EDUCATION","CERTIFICATIONS","ACHIEVEMENTS & ACTIVITIES",
+    "ACHIEVEMENTS","RESUME DETAILS","RESUME INFORMATION","END OF RESUME","END RESUME"
+  ];
+  const escaped=headings.map(h=>h.replace(/[.*+?^()|[\\]\\]/g,"\\$&")).join("|");
+  raw=raw.replace(new RegExp("(?:^|[ \\t|])("+escaped+")(?=[ \\t|:]|$)","gi"),(match,heading)=>{
+    return "\n"+heading.toUpperCase()+"\n";
+  });
+  return raw
+    .replace(/[ \\t]+/g," ")
+    .replace(/[ \\t]*\n[ \\t]*/g,"\n")
+    .replace(/\n{3,}/g,"\n\n")
+    .trim();
+}
+
 function optimizeText(raw){
-  const rawLines=raw.replace(/\r/g,"").split("\n").map(s=>s.replace(/\s+/g," ").trim()).filter(Boolean);
+  const prepared=splitEmbeddedResumeHeadings(raw);
+  const rawLines=prepared.split("\n").map(s=>s.trim()).filter(Boolean);
   if(!rawLines.length)return "";
   const sections={},order=[],header=[];let current=null;
+  const wrapperHeadings=new Set(["RESUME DETAILS","RESUME INFORMATION","END OF RESUME","END RESUME"]);
   for(const line of rawLines){
+    const key=line.replace(/[:：]+$/,"").trim().toUpperCase();
+    if(wrapperHeadings.has(key))break;
     const heading=canonicalSection(line);
-    if(heading){current=heading;if(!sections[heading]){sections[heading]=[];order.push(heading)}continue}
+    if(heading){
+      current=heading;
+      if(!sections[heading]){sections[heading]=[];order.push(heading)}
+      continue;
+    }
     if(!current){header.push(line);continue}
     sections[current].push(line.replace(/^[•●▪◦➤*-]\s*/,"- "));
   }
   const out=[];
-  if(header.length){out.push(header[0].toUpperCase());if(header.length>1)out.push(header.slice(1).join(" | "))}
+  if(header.length){
+    out.push(header[0].toUpperCase());
+    if(header.length>1)out.push(header.slice(1).join(" | "));
+  }
   const preferred=["Professional Summary","Skills","Work Experience","Projects","Education","Certifications","Achievements & Activities"];
   const arranged=[...preferred.filter(x=>sections[x]),...order.filter(x=>!preferred.includes(x))];
   arranged.forEach(name=>{
@@ -580,7 +610,6 @@ function optimizeText(raw){
     }).join("\n");
     if(body.trim())out.push("",name.toUpperCase(),body);
   });
-  if(!arranged.length&&header.length>1)out.push("", "RESUME DETAILS",header.slice(1).map(x=>x.replace(/^[•●▪◦*-]\s*/,"- ")).join("\n"));
   return out.join("\n").trim()+"\n";
 }
 $("optimize-btn").addEventListener("click",()=>{
@@ -593,49 +622,24 @@ $("copy-optimized").addEventListener("click",async()=>{try{await navigator.clipb
 
 
 function normalizeResumeLayout(text){
-  let raw=String(text||"")
-    .replace(/\r/g,"")
-    .replace(/\uFEFF/g,"")
-    .trim();
+  let raw=splitEmbeddedResumeHeadings(text);
+  if(!raw)return "";
 
-  /*
-   * Free-model responses can arrive as one long paragraph even when the
-   * prompt asked for normal resume sections. Split embedded standard headings
-   * before export so the PDF/DOCX generator can format them correctly.
-   */
-  const headings=[
-    "PROFESSIONAL SUMMARY",
-    "TECHNICAL SKILLS",
-    "WORK EXPERIENCE",
-    "ACHIEVEMENTS & ACTIVITIES",
-    "RESUME DETAILS",
-    "RESUME INFORMATION",
-    "END OF RESUME",
-    "END RESUME",
-    "CERTIFICATIONS",
-    "EDUCATION",
-    "PROJECTS",
-    "AI REVIEW",
-    "FINAL IMPROVED RESUME",
-    "IMPROVED RESUME",
-    "ATS-FRIENDLY VERSION",
-    "ATS FRIENDLY VERSION"
+  const extraHeadings=[
+    "AI REVIEW","FINAL IMPROVED RESUME","IMPROVED RESUME",
+    "ATS-FRIENDLY VERSION","ATS FRIENDLY VERSION"
   ];
-
-  for(const heading of headings){
-    const escaped=heading.replace(/[.*+?^()|[\]\\]/g,"\\$&");
-    raw=raw.replace(new RegExp("[ \t]+(?="+escaped+"(?:[ \t]|:|$))","gi"),"\n");
+  for(const heading of extraHeadings){
+    const escaped=heading.replace(/[.*+?^()|[\\]\\]/g,"\\$&");
+    raw=raw.replace(new RegExp("(?:^|[ \\t|])("+escaped+")(?=[ \\t|:]|$)","gi"),"\n$1\n");
   }
 
-  raw=raw
-    .replace(/[ \t]+/g," ")
-    .replace(/[ \t]*\n[ \t]*/g,"\n")
+  return raw
+    .replace(/[ \\t]+/g," ")
+    .replace(/[ \\t]*\n[ \\t]*/g,"\n")
     .replace(/\n{3,}/g,"\n\n")
     .trim();
-
-  return raw;
 }
-
 function cleanResumeForExport(text){
   let raw=normalizeResumeLayout(text);
   const wrapperLines=new Set([
@@ -670,7 +674,7 @@ function cleanResumeForExport(text){
   }
 
   const joined=out.join("\n");
-  const wrapperTail=joined.search(/(?:^|\n)\s*(?:RESUME DETAILS|RESUME INFORMATION|END OF RESUME)\s*(?:\n|$)/i);
+  const wrapperTail=joined.search(/(?:^|\n)\s*(?:RESUME DETAILS|RESUME INFORMATION|END OF RESUME|END RESUME)\s*(?:\n|$)/i);
   if(wrapperTail>=0){
     return joined.slice(0,wrapperTail).trim()+"\n";
   }
