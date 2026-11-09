@@ -288,7 +288,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
             <div class="panel-body"><pre id="optimized-text"></pre><p class="disclaimer">This step reorganizes and normalizes the text; it does not invent achievements, add qualifications, or guarantee a particular ATS result. Review every line before using it.</p></div>
           </section>
           <section class="panel optimized ai-output-panel" id="ai-check-panel">
-            <div class="panel-head"><div><h2>AI review</h2><p id="ai-check-meta">ATS analysis and a separate final improved resume.</p></div><span class="ai-tag">OPENROUTER · FREE</span></div>
+            <div class="panel-head"><div><h2>AI Review</h2><p id="ai-check-meta">ATS analysis and a separate final improved resume.</p></div><span class="ai-tag">OPENROUTER · FREE</span></div>
             <div class="panel-body">
               <div class="ai-analysis-card">
                 <div class="ai-analysis-title">ATS Analysis</div>
@@ -301,14 +301,6 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
                 <pre id="ai-check-output"></pre>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
                   <button class="btn small" id="ai-check-copy">Copy resume</button>
-                  <div class="dl-group">
-                    <select class="dl-format" id="ai-check-format" aria-label="Download final resume format">
-                      <option value="pdf">PDF</option>
-                      <option value="docx">DOCX</option>
-                      <option value="txt">TXT</option>
-                    </select>
-                    <button class="btn small primary" id="ai-check-download">⇩ Download resume</button>
-                  </div>
                 </div>
               </div>
               <p class="disclaimer">AI output is a draft, not a guarantee of ATS acceptance. Verify all facts, keywords and claims before applying.</p>
@@ -736,7 +728,7 @@ $("ai-check-copy").addEventListener("click",async()=>{
   try{await navigator.clipboard.writeText($("ai-check-output").textContent);toast("Final improved resume copied.")}
   catch(e){toast("Clipboard unavailable. Select the text to copy.")}
 });
-$("ai-check-download").addEventListener("click",e=>downloadResume("ai-improved-resume",$("ai-check-output").textContent,$("ai-check-format").value,e.currentTarget));
+
 
 /* initial blank entries and preview */
 addEntry("experience");addEntry("education");addEntry("projects");renderPreview();
