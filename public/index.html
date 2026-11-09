@@ -802,7 +802,7 @@ $("ai-check-btn").addEventListener("click",async()=>{
   const data=await callResumeAI(jd?"tailor":"improve",text,jd);
   setButtonBusy(button,false);
   if(!data)return;
-  const finalResume=data.resume||data.result||"";
+  const finalResume=cleanResumeForExport(data.resume||data.result||"");
   const analysis=data.analysis||"No separate AI analysis was returned.";
   // Keep the AI-improved resume as the active download source.
   state.optimizedText=finalResume;
