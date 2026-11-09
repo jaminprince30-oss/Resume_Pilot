@@ -337,14 +337,33 @@ exports.handler = async function(event) {
     });
   }
 
-  const modelText = data?.choices?.[0]?.message?.content;
+  const message = data?.choices?.[0]?.message || {};
+  const rawContent = message.content;
+
+  // OpenRouter normally returns content as a string, but some providers/models
+  // may return structured content parts. Normalize those parts before parsing.
+  const modelText = Array.isArray(rawContent)
+    ? rawContent.map(part => {
+        if (typeof part === "string") return part;
+        if (part && typeof part.text === "string") return part.text;
+        return "";
+      }).join("\n").trim()
+    : (typeof rawContent === "string" ? rawContent.trim() : "");
+
   if (!modelText) {
+    const finishReason = data?.choices?.[0]?.finish_reason;
+    const providerReason = data?.choices?.[0]?.error?.message || data?.error?.message;
     return response(502, {
-      error: "OpenRouter returned no usable AI content.",
+      error: providerReason
+        ? `OpenRouter returned no usable AI content: ${providerReason}`
+        : finishReason
+          ? `OpenRouter returned no usable AI content (finish reason: ${finishReason}).`
+          : "OpenRouter returned no usable AI content.",
       diagnostics: {
         functionReached: true,
         apiKeyPresent: true,
-        openRouterStatus: upstream.status
+        openRouterStatus: upstream.status,
+        finishReason: finishReason || null
       }
     });
   }
