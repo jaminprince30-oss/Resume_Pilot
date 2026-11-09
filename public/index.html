@@ -562,6 +562,27 @@ function canonicalSection(line){
 function splitEmbeddedResumeHeadings(text){
   let raw=String(text||"").replace(/\r/g,"").replace(/\uFEFF/g,"").trim();
   if(!raw)return "";
+
+  // AI output often arrives as one long line. Force known resume section
+  // headings onto their own lines before the ATS formatter parses sections.
+  const headings=[
+    "PROFESSIONAL SUMMARY",
+    "SKILLS",
+    "TECHNICAL SKILLS",
+    "WORK EXPERIENCE",
+    "PROJECTS",
+    "EDUCATION",
+    "CERTIFICATIONS",
+    "ACHIEVEMENTS & ACTIVITIES",
+    "ACHIEVEMENTS",
+    "RESUME DETAILS",
+    "RESUME INFORMATION",
+    "END OF RESUME",
+    "END RESUME"
+  ];
+  const escaped=headings.map(h=>h.replace(/[.*+?^()|[\\]\\]/g,"\\function splitEmbeddedResumeHeadings(text){
+  let raw=String(text||"").replace(/\r/g,"").replace(/\uFEFF/g,"").trim();
+  if(!raw)return "";
   const headings=[
     "PROFESSIONAL SUMMARY","SKILLS","TECHNICAL SKILLS","WORK EXPERIENCE",
     "PROJECTS","EDUCATION","CERTIFICATIONS","ACHIEVEMENTS & ACTIVITIES",
@@ -575,6 +596,18 @@ function splitEmbeddedResumeHeadings(text){
     .replace(/[ \\t]+/g," ")
     .replace(/[ \\t]*\n[ \\t]*/g,"\n")
     .replace(/\n{3,}/g,"\n\n")
+    .trim();
+}
+
+function optimizeText")).join("|");
+  const headingPattern=new RegExp("\\b("+escaped+")\\b","gi");
+
+  raw=raw.replace(headingPattern,(match)=>"\\n"+match.toUpperCase()+"\\n");
+
+  return raw
+    .replace(/[ \\t]+/g," ")
+    .replace(/[ \\t]*\\n[ \\t]*/g,"\\n")
+    .replace(/\\n{3,}/g,"\\n\\n")
     .trim();
 }
 
