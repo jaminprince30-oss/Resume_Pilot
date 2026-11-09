@@ -94,6 +94,10 @@ function sanitizeResumeOutput(text) {
     }
   }
 
+  // Free models may append a duplicate "RESUME DETAILS" block after the real resume.
+  // Treat that marker as generated duplicate content, not as a resume section.
+  raw = raw.replace(/\n\s*RESUME DETAILS\s*\n[\s\S]*$/i, "").trim();
+
   // Remove repeated standard section blocks by keeping the final occurrence.
   // This is deliberately limited to common headings to avoid deleting valid text.
   const headers = [
