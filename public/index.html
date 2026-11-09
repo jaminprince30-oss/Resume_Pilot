@@ -582,12 +582,12 @@ function splitEmbeddedResumeHeadings(text){
   ];
   const headingPattern=new RegExp("\\b("+headings.join("|")+")\\b","gi");
 
-  raw=raw.replace(headingPattern,(match)=>"\\n"+match.toUpperCase()+"\\n");
+  raw=raw.replace(headingPattern,(match)=>"\n"+match.toUpperCase()+"\n");
 
   return raw
-    .replace(/[ \\t]+/g," ")
-    .replace(/[ \\t]*\\n[ \\t]*/g,"\\n")
-    .replace(/\\n{3,}/g,"\\n\\n")
+    .replace(/[ \t]+/g," ")
+    .replace(/[ \t]*\n[ \t]*/g,"\n")
+    .replace(/\n{3,}/g,"\n\n")
     .trim();
 }
 
