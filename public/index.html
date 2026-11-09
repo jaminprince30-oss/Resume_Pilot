@@ -715,13 +715,13 @@ function normalizeResumeLayout(text){
     "ATS-FRIENDLY VERSION","ATS FRIENDLY VERSION"
   ];
   for(const heading of extraHeadings){
-    const escaped=heading.replace(/[.*+?^()|[\\]\\]/g,"\\$&");
+    const escaped=heading.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
     raw=raw.replace(new RegExp("(?:^|[ \\t|])("+escaped+")(?=[ \\t|:]|$)","gi"),"\n$1\n");
   }
 
   return raw
-    .replace(/[ \\t]+/g," ")
-    .replace(/[ \\t]*\n[ \\t]*/g,"\n")
+    .replace(/[ \t]+/g," ")
+    .replace(/[ \t]*\n[ \t]*/g,"\n")
     .replace(/\n{3,}/g,"\n\n")
     .trim();
 }
