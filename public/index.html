@@ -555,7 +555,7 @@ function canonicalSection(line){
   if(/^(technical )?(core )?skills|^competencies$/.test(s))return "Skills";
   if(/^(academic )?projects$|^selected projects$/.test(s))return "Projects";
   if(/^(certifications|certificates|licenses)$/.test(s))return "Certifications";
-  if(/^(achievements|awards|activities|leadership|volunteering)$/.test(s))return "Achievements & Activities";
+  if(/^(achievements(?: & activities)?|awards|activities|leadership|volunteering)$/.test(s))return "Achievements & Activities";
   if(/^(publications|research|additional information)$/.test(s))return s.replace(/\b\w/g,c=>c.toUpperCase());
   return null;
 }
@@ -616,7 +616,7 @@ function buildAtsText(text){
   const raw=String(text||"").trim();
   if(!raw)return "";
   const optimized=optimizeText(raw);
-  if(optimized && /(?:^|\\n)(?:PROFESSIONAL SUMMARY|SKILLS|WORK EXPERIENCE|PROJECTS|EDUCATION|CERTIFICATIONS|ACHIEVEMENTS & ACTIVITIES)(?:\\n|$)/i.test(optimized)){
+  if(optimized && /(?:^|\n)(?:PROFESSIONAL SUMMARY|SKILLS|WORK EXPERIENCE|PROJECTS|EDUCATION|CERTIFICATIONS|ACHIEVEMENTS & ACTIVITIES)(?:\n|$)/i.test(optimized)){
     return optimized;
   }
   return cleanResumeForExport(raw);
