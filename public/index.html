@@ -612,10 +612,22 @@ function optimizeText(raw){
   });
   return out.join("\n").trim()+"\n";
 }
+function buildAtsText(text){
+  const raw=String(text||"").trim();
+  if(!raw)return "";
+  const optimized=optimizeText(raw);
+  if(optimized && /(?:^|\\n)(?:PROFESSIONAL SUMMARY|SKILLS|WORK EXPERIENCE|PROJECTS|EDUCATION|CERTIFICATIONS|ACHIEVEMENTS & ACTIVITIES)(?:\\n|$)/i.test(optimized)){
+    return optimized;
+  }
+  return cleanResumeForExport(raw);
+}
 $("optimize-btn").addEventListener("click",()=>{
   const text=state.lastResumeText||$("resume-text").value;
   if(!text.trim()){toast("Run the check with resume text first.");return}
-  state.optimizedText=optimizeText(text);$("optimized-text").textContent=state.optimizedText;$("optimized-panel").classList.add("show");$("optimized-panel").scrollIntoView({behavior:"smooth",block:"start"});
+  state.optimizedText=buildAtsText(text);
+  $("optimized-text").textContent=state.optimizedText;
+  $("optimized-panel").classList.add("show");
+  $("optimized-panel").scrollIntoView({behavior:"smooth",block:"start"});
 });
 $("copy-optimized").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(state.optimizedText);toast("Optimized text copied.")}catch(e){toast("Copy unavailable in this browser. Select the text to copy.")}});
 /* Multi-format resume export (PDF, DOCX, TXT) — generated locally in the browser */
@@ -747,13 +759,24 @@ async function downloadResume(baseName,text,format,button){
   }catch(e){toast(e.message||"Could not create the file. Try TXT instead.")}
   finally{setButtonBusy(button,false)}
 }
-$("download-optimized").addEventListener("click",e=>downloadResume("ats-friendly-resume",state.optimizedText,$("optimized-format").value,e.currentTarget));
+$("download-optimized").addEventListener("click",e=>{
+  const text=state.optimizedText||buildAtsText(state.lastResumeText||$("resume-text").value);
+  if(!text.trim()){toast("Run the ATS check first.");return}
+  state.optimizedText=text;
+  $("optimized-text").textContent=text;
+  downloadResume("ats-friendly-resume",text,$("optimized-format").value,e.currentTarget);
+});
 $("checker-download").addEventListener("click",e=>{
   const aiResume=$("ai-check-output").textContent.trim();
-  const rawText=aiResume||state.optimizedText||state.lastResumeText||$("resume-text").value;
-  const text=cleanResumeForExport(rawText);
+  let text="";
+  if(aiResume){
+    text=cleanResumeForExport(aiResume);
+  }else{
+    const source=state.lastResumeText||$("resume-text").value;
+    text=state.optimizedText||buildAtsText(source);
+    state.optimizedText=text;
+  }
   if(!text.trim()){toast("Run the ATS check or AI Review first.");return}
-  if(!aiResume&&!state.optimizedText)state.optimizedText=text;
   downloadResume("ats-friendly-resume",text,$("checker-format").value,e.currentTarget);
 });
 
