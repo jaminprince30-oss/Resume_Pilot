@@ -591,6 +591,7 @@ $("optimize-btn").addEventListener("click",()=>{
 $("copy-optimized").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(state.optimizedText);toast("Optimized text copied.")}catch(e){toast("Copy unavailable in this browser. Select the text to copy.")}});
 /* Multi-format resume export (PDF, DOCX, TXT) — generated locally in the browser */
 
+
 function normalizeResumeLayout(text){
   let raw=String(text||"")
     .replace(/\r/g,"")
@@ -625,14 +626,14 @@ function normalizeResumeLayout(text){
   ];
 
   for(const heading of headings){
-    const escaped=heading.replace(/[.*+?^()|[\\]\\]/g,"\\$&");
-    raw=raw.replace(new RegExp("[ \\t]+(?="+escaped+"(?:[ \\t]|:|$))","gi"),"\\n");
+    const escaped=heading.replace(/[.*+?^()|[\]\\]/g,"\\$&");
+    raw=raw.replace(new RegExp("[ \t]+(?="+escaped+"(?:[ \t]|:|$))","gi"),"\n");
   }
 
   raw=raw
-    .replace(/[ \\t]+/g," ")
-    .replace(/[ \\t]*\\n[ \\t]*/g,"\\n")
-    .replace(/\\n{3,}/g,"\\n\\n")
+    .replace(/[ \t]+/g," ")
+    .replace(/[ \t]*\n[ \t]*/g,"\n")
+    .replace(/\n{3,}/g,"\n\n")
     .trim();
 
   return raw;
@@ -645,34 +646,39 @@ function cleanResumeForExport(text){
     "ATS FRIENDLY VERSION","RESUME DETAILS","RESUME INFORMATION","END OF RESUME",
     "END RESUME","ANALYSIS","AI ANALYSIS"
   ]);
-  const fence=/^\\s*\\x60{3}(?:markdown|md|text)?\\s*$/i;
-  const lines=String(raw||"").replace(/\\r/g,"").replace(/\\uFEFF/g,"").split("\\n")
-    .map(line=>line.replace(/\\*\\*(.+?)\\*\\*/g,"$1").replace(/__(.+?)__/g,"$1").trim());
+  const fence=/^\s*\x60{3}(?:markdown|md|text)?\s*$/i;
+  const lines=String(raw||"").replace(/\r/g,"").replace(/\uFEFF/g,"").split("\n")
+    .map(line=>line.replace(/\*\*(.+?)\*\*/g,"$1").replace(/__(.+?)__/g,"$1").trim());
   const out=[];const seen=new Set();let skipDuplicateSection=false;
+
   for(let rawLine of lines){
     rawLine=rawLine.replace(fence,"").trim();
     if(!rawLine)continue;
-    const key=rawLine.replace(/^#+\\s*/,"").replace(/[:：]+$/,"").trim().toUpperCase();
+
+    const key=rawLine.replace(/^#+\s*/,"").replace(/[:：]+$/,"").trim().toUpperCase();
     if(wrapperLines.has(key))continue;
+
     const section=canonicalSection(rawLine);
     if(section){
       if(seen.has(section)){skipDuplicateSection=true;continue}
-      seen.add(section);skipDuplicateSection=false;
+      seen.add(section);
+      skipDuplicateSection=false;
     }else if(skipDuplicateSection){
       continue;
     }
-    const normalized=rawLine.replace(/[•●▪◦➤]/g,"-").replace(/[ \\t]+/g," ").trim();
+
+    const normalized=rawLine.replace(/[•●▪◦➤]/g,"-").replace(/[ \t]+/g," ").trim();
     if(normalized && normalized===out[out.length-1])continue;
     out.push(rawLine);
   }
 
   const joined=out.join("\n");
-  const wrapperTail=joined.search(/(?:^|\\n)\\s*(?:RESUME DETAILS|RESUME INFORMATION|END OF RESUME)\\s*(?:\\n|$)/i);
+  const wrapperTail=joined.search(/(?:^|\n)\s*(?:RESUME DETAILS|RESUME INFORMATION|END OF RESUME)\s*(?:\n|$)/i);
   if(wrapperTail>=0){
-    return joined.slice(0,wrapperTail).trim()+"\\n";
+    return joined.slice(0,wrapperTail).trim()+"\n";
   }
 
-  return joined.trim()+"\\n";
+  return joined.trim()+"\n";
 }
 function cleanExportLines(text){
   return cleanResumeForExport(text).split("\n").map(l=>l.replace(/\s+$/,""));
