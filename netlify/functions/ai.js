@@ -182,6 +182,8 @@ function buildPrompt(mode, resumeText, jobDescription) {
     '{"analysis":"...","resume":"..."}',
     "The resume field must contain ONLY the finished resume.",
     "The resume field must never contain analysis, recommendations, explanations, review headings, scores, editing thoughts, or phrases such as \"Let's rewrite\", \"Probably we need\", or \"Here is the revised resume\".",
+    "The analysis field must use exactly these four headings in this order: STRENGTHS, WEAKNESSES, MISSING INFORMATION, SUGGESTED IMPROVEMENTS. Under each heading use concise bullet points.",
+    "Do not put any analysis inside resume.",
     "Do not repeat sections.",
     "Do not add text before or after the resume."
   ].join("\n");
