@@ -718,6 +718,8 @@ $("ai-check-btn").addEventListener("click",async()=>{
   if(!data)return;
   const finalResume=data.resume||data.result||"";
   const analysis=data.analysis||"No separate AI analysis was returned.";
+  // Keep the AI-improved resume as the active download source.
+  state.optimizedText=finalResume;
   $("ai-check-output").textContent=finalResume;
   $("ai-check-analysis").textContent=analysis;
   $("ai-check-meta").textContent="Reviewed with "+(data.model||"OpenRouter free model")+(jd?" · Job description included":" · General ATS improvement");
