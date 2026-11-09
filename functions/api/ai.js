@@ -8,7 +8,8 @@ function response(statusCode, body) {
       "Cache-Control": "no-store, max-age=0"
     },
     body: JSON.stringify(body)
-  }
+  };
+}
 
 export async function onRequestPost(context) {
   const request = context.request;
@@ -283,7 +284,7 @@ function buildPrompt(mode, resumeText, jobDescription) {
   };
 }
 
-async function callOpenRouter(model, prompt) {
+async function callOpenRouter(model, prompt, env) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 50000);
 
@@ -311,7 +312,7 @@ async function callOpenRouter(model, prompt) {
 }
 
 function safeErrorMessage(status, providerMessage) {
-  if (status === 401) return "OpenRouter authentication failed (HTTP 401). Check the Netlify API key.";
+  if (status === 401) return "OpenRouter authentication failed (HTTP 401). Check the Cloudflare Pages API key.";
   if (status === 402) return "OpenRouter returned HTTP 402 (payment/credit requirement).";
   if (status === 403) return "OpenRouter returned HTTP 403 (access denied).";
   if (status === 429) return "OpenRouter rate limit/free-model limit reached (HTTP 429).";
@@ -326,7 +327,7 @@ async function handler(event, env) {
 
   if (!env.OPENROUTER_API_KEY) {
     return response(500, {
-      error: "OpenRouter is not configured. Add the OpenRouter API key in Netlify environment variables."
+      error: "OpenRouter is not configured. Add the OpenRouter API key in Cloudflare Pages environment variables."
     });
   }
 
@@ -358,7 +359,7 @@ async function handler(event, env) {
 
   let upstream;
   try {
-    upstream = await callOpenRouter(model, prompt);
+    upstream = await callOpenRouter(model, prompt, env);
   } catch (error) {
     return response(502, {
       error: error && error.name === "AbortError"
