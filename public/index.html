@@ -590,8 +590,36 @@ $("optimize-btn").addEventListener("click",()=>{
 });
 $("copy-optimized").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(state.optimizedText);toast("Optimized text copied.")}catch(e){toast("Copy unavailable in this browser. Select the text to copy.")}});
 /* Multi-format resume export (PDF, DOCX, TXT) — generated locally in the browser */
+function cleanResumeForExport(text){
+  const wrapperLines=new Set([
+    "AI REVIEW","FINAL IMPROVED RESUME","IMPROVED RESUME","ATS-FRIENDLY VERSION",
+    "ATS FRIENDLY VERSION","RESUME DETAILS","RESUME INFORMATION","END OF RESUME",
+    "END RESUME","ANALYSIS","AI ANALYSIS"
+  ]);
+  const fence=/^\s*\x60{3}(?:markdown|md|text)?\s*$/i;
+  const lines=String(text||"").replace(/\r/g,"").replace(/\uFEFF/g,"").split("\n")
+    .map(line=>line.replace(/\*\*(.+?)\*\*/g,"$1").replace(/__(.+?)__/g,"$1").trim());
+  const out=[];const seen=new Set();let skipDuplicateSection=false;
+  for(let raw of lines){
+    raw=raw.replace(fence,"").trim();
+    if(!raw)continue;
+    const key=raw.replace(/^#+\s*/,"").replace(/[:：]+$/,"").trim().toUpperCase();
+    if(wrapperLines.has(key))continue;
+    const section=canonicalSection(raw);
+    if(section){
+      if(seen.has(section)){skipDuplicateSection=true;continue}
+      seen.add(section);skipDuplicateSection=false;
+    }else if(skipDuplicateSection){
+      continue;
+    }
+    const normalized=raw.replace(/[•●▪◦➤]/g,"-").replace(/\s+/g," ").trim();
+    if(normalized && normalized===out[out.length-1])continue;
+    out.push(raw);
+  }
+  return out.join("\n").trim()+"\n";
+}
 function cleanExportLines(text){
-  return text.replace(/\r/g,"").split("\n").map(l=>l.replace(/\*\*(.+?)\*\*/g,"$1").replace(/__(.+?)__/g,"$1").replace(/\s+$/,""));
+  return cleanResumeForExport(text).split("\n").map(l=>l.replace(/\s+$/,""));
 }
 function exportLineKind(line,index){
   const t=line.trim();
@@ -615,7 +643,7 @@ async function exportPdf(filename,text){
   const doc=new window.jspdf.jsPDF({unit:"pt",format:"letter"});
   const margin=54,pageW=doc.internal.pageSize.getWidth(),pageH=doc.internal.pageSize.getHeight(),maxW=pageW-margin*2;let y=margin;
   const ensure=h=>{if(y+h>pageH-margin){doc.addPage();y=margin}};
-  exportStructure(text).forEach(b=>{
+  exportStructure(cleanResumeForExport(text)).forEach(b=>{
     const t=pdfSafe(b.text);
     if(b.kind==="blank"){y+=6;return}
     if(b.kind==="title"){doc.setFont("helvetica","bold");doc.setFontSize(17);const w=doc.splitTextToSize(t,maxW);ensure(w.length*20);doc.text(w,margin,y+12);y+=w.length*20+2;return}
@@ -631,7 +659,7 @@ function xmlEsc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/
 async function exportDocx(filename,text){
   await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js","JSZip");
   const run=(t,{bold=false,size=21}={})=>`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>${bold?"<w:b/>":""}<w:sz w:val="${size}"/></w:rPr><w:t xml:space="preserve">${xmlEsc(t)}</w:t></w:r>`;
-  const body=exportStructure(text).map(b=>{
+  const body=exportStructure(cleanResumeForExport(text)).map(b=>{
     if(b.kind==="blank")return "";
     if(b.kind==="title")return `<w:p><w:pPr><w:spacing w:after="60"/></w:pPr>${run(b.text,{bold:true,size:34})}</w:p>`;
     if(b.kind==="heading")return `<w:p><w:pPr><w:keepNext/><w:spacing w:before="220" w:after="80"/><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="999999"/></w:pBdr></w:pPr>${run(b.text.toUpperCase(),{bold:true,size:23})}</w:p>`;
@@ -659,9 +687,10 @@ async function downloadResume(baseName,text,format,button){
 $("download-optimized").addEventListener("click",e=>downloadResume("ats-friendly-resume",state.optimizedText,$("optimized-format").value,e.currentTarget));
 $("checker-download").addEventListener("click",e=>{
   const aiResume=$("ai-check-output").textContent.trim();
-  const text=aiResume||state.optimizedText||state.lastResumeText||$("resume-text").value;
+  const rawText=aiResume||state.optimizedText||state.lastResumeText||$("resume-text").value;
+  const text=cleanResumeForExport(rawText);
   if(!text.trim()){toast("Run the ATS check or AI Review first.");return}
-  if(!aiResume&&!state.optimizedText)state.optimizedText=optimizeText(text);
+  if(!aiResume&&!state.optimizedText)state.optimizedText=text;
   downloadResume("ats-friendly-resume",text,$("checker-format").value,e.currentTarget);
 });
 
