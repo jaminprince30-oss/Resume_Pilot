@@ -658,10 +658,11 @@ async function downloadResume(baseName,text,format,button){
 }
 $("download-optimized").addEventListener("click",e=>downloadResume("ats-friendly-resume",state.optimizedText,$("optimized-format").value,e.currentTarget));
 $("checker-download").addEventListener("click",e=>{
-  const text=state.lastResumeText||$("resume-text").value;
-  if(!text.trim()){toast("Run the ATS check with resume text first.");return}
-  state.optimizedText=optimizeText(text);
-  downloadResume("ats-friendly-resume",state.optimizedText,$("checker-format").value,e.currentTarget);
+  const aiResume=$("ai-check-output").textContent.trim();
+  const text=aiResume||state.optimizedText||state.lastResumeText||$("resume-text").value;
+  if(!text.trim()){toast("Run the ATS check or AI Review first.");return}
+  if(!aiResume&&!state.optimizedText)state.optimizedText=optimizeText(text);
+  downloadResume("ats-friendly-resume",text,$("checker-format").value,e.currentTarget);
 });
 
 /* OpenRouter AI integration: the API key is kept server-side in OPENROUTER_API_KEY. */
