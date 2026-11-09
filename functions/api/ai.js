@@ -201,6 +201,56 @@ function fallbackSplit(text) {
   };
 }
 
+function extractPartialJsonStringField(text, fieldName) {
+  const raw = String(text || "");
+  const marker = new RegExp('["'] + fieldName + '["']\\s*:\\s*["']');
+  const match = raw.match(marker);
+  if (!match || match.index === undefined) return "";
+
+  const start = match.index + match[0].length;
+  let escaped = false;
+  let value = "";
+
+  for (let i = start; i < raw.length; i++) {
+    const ch = raw[i];
+
+    if (escaped) {
+      value += ch;
+      escaped = false;
+      continue;
+    }
+
+    if (ch === "\\\\") {
+      value += ch;
+      escaped = true;
+      continue;
+    }
+
+    if (ch === '"') {
+      try {
+        return JSON.parse('"' + value + '"');
+      } catch (_) {
+        return value
+          .replace(/\\n/g, "\n")
+          .replace(/\\r/g, "\r")
+          .replace(/\\t/g, "\t")
+          .replace(/\\\\/g, "\\\\")
+          .replace(/\\"/g, '"');
+      }
+    }
+
+    value += ch;
+  }
+
+  // The model may have been cut off before the closing quote.
+  return value
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\r")
+    .replace(/\\t/g, "\t")
+    .replace(/\\\\/g, "\\\\")
+    .replace(/\\"/g, '"');
+}
+
 function normalizeAiResult(text) {
   const parsed = extractJson(text);
 
@@ -209,6 +259,19 @@ function normalizeAiResult(text) {
     const resume = sanitizeResumeOutput(parsed.resume);
 
     if (resume) return { analysis, resume };
+  }
+
+  // Free models can hit the output limit before the JSON closing brace.
+  // Because the prompt puts resume first, recover that field even from
+  // otherwise incomplete JSON instead of displaying the raw JSON to users.
+  const partialResume = sanitizeResumeOutput(extractPartialJsonStringField(text, "resume"));
+  const partialAnalysis = cleanText(extractPartialJsonStringField(text, "analysis"));
+
+  if (partialResume) {
+    return {
+      analysis: partialAnalysis || "AI reviewed the resume and produced an improved ATS-friendly version.",
+      resume: partialResume
+    };
   }
 
   return fallbackSplit(text);
@@ -229,14 +292,15 @@ function buildPrompt(mode, resumeText, jobDescription) {
   ].join("\n");
 
   const jsonContract = [
-    "Return ONLY valid JSON with exactly two string fields:",
-    '{"analysis":"...","resume":"..."}',
+    "Return ONLY valid JSON with exactly two string fields, in this order:",
+    '{"resume":"...","analysis":"..."}',
+    "Put the complete finished resume FIRST in the resume field so it is still recoverable if a free model reaches its output limit.",
     "The resume field must contain ONLY the finished resume.",
     "The resume field must never contain analysis, recommendations, explanations, review headings, scores, editing thoughts, or phrases such as \"Let's rewrite\", \"Probably we need\", or \"Here is the revised resume\".",
-    "The analysis field must use exactly these four headings in this order: STRENGTHS, WEAKNESSES, MISSING INFORMATION, SUGGESTED IMPROVEMENTS. Under each heading use concise bullet points.",
+    "Keep the analysis field SHORT: maximum 4 bullets total, one concise bullet under each of STRENGTHS, WEAKNESSES, MISSING INFORMATION, SUGGESTED IMPROVEMENTS.",
     "Do not put any analysis inside resume.",
     "Do not repeat sections.",
-    "Do not add text before or after the resume."
+    "Do not add text before or after the JSON."
   ].join("\n");
 
   if (mode === "generate") {
@@ -304,7 +368,7 @@ async function callOpenRouter(model, prompt, env) {
         // Free OpenRouter models can spend the output budget on reasoning.
         // Keep reasoning light and leave enough room for the actual JSON resume.
         reasoning: { effort: "low" },
-        max_tokens: 7000
+        max_tokens: 10000
       }),
       signal: controller.signal
     });
