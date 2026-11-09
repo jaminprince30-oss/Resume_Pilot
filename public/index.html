@@ -283,10 +283,6 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
             </div>
           </section>
 
-          <section class="panel optimized" id="optimized-panel">
-            <div class="panel-head"><div><h2>3. ATS-friendly version</h2><p>Reformatted using standard headings and plain text.</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn small" id="copy-optimized">Copy</button><div class="dl-group"><select class="dl-format" id="optimized-format" aria-label="Download format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn small primary" id="download-optimized">⇩ Download</button></div></div></div>
-            <div class="panel-body"><pre id="optimized-text"></pre><p class="disclaimer">This step reorganizes and normalizes the text; it does not invent achievements, add qualifications, or guarantee a particular ATS result. Review every line before using it.</p></div>
-          </section>
           <section class="panel optimized ai-output-panel" id="ai-check-panel">
             <div class="panel-head"><div><h2>AI Review</h2><p id="ai-check-meta">ATS analysis and a separate final improved resume.</p></div><span class="ai-tag">OPENROUTER · FREE</span></div>
             <div class="panel-body">
@@ -322,9 +318,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
               <div class="metric"><div class="metric-head"><span>Formatting signals</span><span id="format-value">—</span></div><div class="bar"><span id="format-bar"></span></div></div>
               <div class="result-list" id="result-list"></div>
               <div class="tip-box"><strong>What this score means</strong><br>This is a practical checklist estimate—not a score from an employer’s ATS. Different systems parse documents differently.</div>
-              <button class="btn primary" id="optimize-btn" style="width:100%;margin-top:15px">Make formatting ATS-friendly →</button>
-              <button class="btn soft" id="ai-check-btn" style="width:100%;margin-top:8px">✦ AI review & improve resume</button>
-              <div class="download-box"><strong>Download ATS-friendly resume</strong><p>Choose a format for the cleaned-up version of your resume.</p><div class="dl-group wide"><select class="dl-format" id="checker-format" aria-label="Download format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn primary" id="checker-download">⇩ Download</button></div></div>
+              <button class="btn primary" id="ai-check-btn" style="width:100%;margin-top:15px">✦ AI Review • Improve • ATS Format →</button>
             </div>
           </section>
           <div class="tip-box"><strong>Good ATS habits</strong><br>Use one column, standard section names, readable fonts, consistent dates and simple bullets. Avoid tables, text boxes, icons, graphics and important details in headers or footers.</div>
@@ -621,7 +615,7 @@ function runAnalysis(){
     const missing=r.jdTokens.filter(w=>!r.present.includes(w)).slice(0,8);
     if(missing.length)$("result-list").insertAdjacentHTML("beforeend",`<div class="result-row warn"><div class="status">⌕</div><div><strong>Job-description terms to review</strong><p>${missing.map(esc).join(", ")}. Include only those that genuinely match your background.</p></div></div>`);
   }
-  $("optimized-panel").classList.remove("show");$("optimized-text").textContent="";
+
 }
 $("analyze-btn").addEventListener("click",runAnalysis);
 $("clear-checker").addEventListener("click",()=>{$("resume-text").value="";$("job-description").value="";$("resume-file").value="";$("file-name").textContent="";$("check-results").classList.remove("show");$("optimized-panel").classList.remove("show");$("ai-check-panel").classList.remove("show");$("ai-check-output").textContent="";state.lastResumeText="";state.optimizedText="";toast("Checker cleared.")});
@@ -721,15 +715,6 @@ function buildAtsText(text){
   }
   return cleanResumeForExport(raw);
 }
-$("optimize-btn").addEventListener("click",()=>{
-  const text=state.lastResumeText||$("resume-text").value;
-  if(!text.trim()){toast("Run the check with resume text first.");return}
-  state.optimizedText=buildAtsText(text);
-  $("optimized-text").textContent=state.optimizedText;
-  $("optimized-panel").classList.add("show");
-  $("optimized-panel").scrollIntoView({behavior:"smooth",block:"start"});
-});
-$("copy-optimized").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(state.optimizedText);toast("Optimized text copied.")}catch(e){toast("Copy unavailable in this browser. Select the text to copy.")}});
 /* Multi-format resume export (PDF, DOCX, TXT) — generated locally in the browser */
 
 
@@ -859,27 +844,6 @@ async function downloadResume(baseName,text,format,button){
   }catch(e){toast(e.message||"Could not create the file. Try TXT instead.")}
   finally{setButtonBusy(button,false)}
 }
-$("download-optimized").addEventListener("click",e=>{
-  const text=state.optimizedText||buildAtsText(state.lastResumeText||$("resume-text").value);
-  if(!text.trim()){toast("Run the ATS check first.");return}
-  state.optimizedText=text;
-  $("optimized-text").textContent=text;
-  downloadResume("ats-friendly-resume",text,$("optimized-format").value,e.currentTarget);
-});
-$("checker-download").addEventListener("click",e=>{
-  const aiResume=$("ai-check-output").textContent.trim();
-  let text="";
-  if(aiResume){
-    text=cleanResumeForExport(aiResume);
-  }else{
-    const source=state.lastResumeText||$("resume-text").value;
-    text=state.optimizedText||buildAtsText(source);
-    state.optimizedText=text;
-  }
-  if(!text.trim()){toast("Run the ATS check or AI Review first.");return}
-  downloadResume("ats-friendly-resume",text,$("checker-format").value,e.currentTarget);
-});
-
 /* OpenRouter AI integration: the API key is kept server-side in OPENROUTER_API_KEY. */
 async function callResumeAI(mode, resumeText, jobDescription=""){
   if(!resumeText || !resumeText.trim()){toast("Add or upload resume details first.");return null}
@@ -926,19 +890,24 @@ $("builder-ai-download").addEventListener("click",()=>{
 });
 $("ai-check-btn").addEventListener("click",async()=>{
   const text=state.lastResumeText||$("resume-text").value.trim();
-  if(!text){toast("Run the ATS check with resume text first.");return}
+  if(!text){toast("Upload a resume or paste its text first.");return}
+
+  // One action: run the local ATS checklist, then send the resume to AI
+  // for review, factual improvement, and ATS-friendly restructuring.
+  runAnalysis();
+
   const jd=$("job-description").value.trim();
-  const button=$("ai-check-btn");setButtonBusy(button,true,"✦ Reviewing…");
+  const button=$("ai-check-btn");setButtonBusy(button,true,"✦ AI reviewing…");
   const data=await callResumeAI(jd?"tailor":"improve",text,jd);
   setButtonBusy(button,false);
   if(!data)return;
+
   const finalResume=cleanResumeForExport(data.resume||data.result||"");
   const analysis=data.analysis||"No separate AI analysis was returned.";
-  // Keep the AI-improved resume as the active download source.
   state.optimizedText=finalResume;
   $("ai-check-output").textContent=finalResume;
   $("ai-check-analysis").textContent=analysis;
-  $("ai-check-meta").textContent="Reviewed with "+(data.model||"OpenRouter free model")+(jd?" · Job description included":" · General ATS improvement");
+  $("ai-check-meta").textContent="AI reviewed, improved and ATS-formatted with "+(data.model||"OpenRouter free model")+(jd?" · Job description included":"");
   $("ai-check-panel").classList.add("show");
   $("ai-check-panel").scrollIntoView({behavior:"smooth",block:"start"});
 });
