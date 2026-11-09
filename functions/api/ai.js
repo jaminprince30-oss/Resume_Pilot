@@ -301,7 +301,10 @@ async function callOpenRouter(model, prompt, env) {
           { role: "user", content: prompt.user }
         ],
         temperature: 0.2,
-        max_tokens: 3500
+        // Free OpenRouter models can spend the output budget on reasoning.
+        // Keep reasoning light and leave enough room for the actual JSON resume.
+        reasoning: { effort: "low" },
+        max_tokens: 7000
       }),
       signal: controller.signal
     });
