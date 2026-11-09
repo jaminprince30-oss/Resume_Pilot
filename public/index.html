@@ -462,6 +462,64 @@ async function loadScript(src,globalName){
   if(window[globalName])return;
   await new Promise((resolve,reject)=>{const s=document.createElement("script");s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error("Could not load the document reader. Check your internet connection or paste the resume text instead."));document.head.appendChild(s)});
 }
+function repairPdfSplitWords(text){
+  let s=String(text||"");
+  const fixes=[
+    [/\\bAr\\s+ificial\\b/gi,"Artificial"],
+    [/\\bIn\\s+elligence\\b/gi,"Intelligence"],
+    [/\\bs\\s+uden\\b/gi,"student"],
+    [/\\bwi\\s+h\\b/gi,"with"],
+    [/\\bprojec\\s+experience\\b/gi,"project experience"],
+    [/\\bcompu\\s+er\\b/gi,"computer"],
+    [/\\bsof\\s+ware\\b/gi,"software"],
+    [/\\bdevelopmen\\s+\\./gi,"development."],
+    [/\\bdevelopmen\\b/gi,"development"],
+    [/\\bpredic\\s+ion\\b/gi,"prediction"],
+    [/\\bpla\\s+e\\b/gi,"plate"],
+    [/\\bde\\s+ec\\s+or\\b/gi,"detector"],
+    [/\\bPy\\s+hon\\b/gi,"Python"],
+    [/\\bConvolu\\s+ional\\b/gi,"Convolutional"],
+    [/\\bNeural\\s+Ne\\s+works\\b/gi,"Neural Networks"],
+    [/\\bDa\\s+abases\\b/gi,"Databases"],
+    [/\\bPos\\s+greSQL\\b/gi,"PostgreSQL"],
+    [/\\bAndroid\\s+S\\s+udio\\b/gi,"Android Studio"],
+    [/\\bGi\\s+\\/Gi\\s+Hub\\b/gi,"Git/GitHub"],
+    [/\\bAI\\s+Cha\\s+bo\\s+s\\b/gi,"AI Chatbots"],
+    [/\\bPho\\s+o\\/Video\\s+Edi\\s+ing\\s+Sof\\s+ware\\b/gi,"Photo/Video Editing Software"],
+    [/\\bAI\\/ML\\s+In\\s+ern\\b/gi,"AI/ML Intern"],
+    [/\\bNes\\s+Cyber\\s+Campus\\b/gi,"Nest Cyber Campus"],
+    [/\\bMon\\s+h\\b/gi,"Month"],
+    [/\\bComple\\s+ed\\b/gi,"Completed"],
+    [/\\bone-mon\\s+h\\b/gi,"one-month"],
+    [/\\bin\\s+ernship\\b/gi,"internship"],
+    [/\\bcer\\s+ifica\\s+ion\\b/gi,"certification"],
+    [/\\bcertifica\\s+ion\\b/gi,"certification"],
+    [/\\bIn\\s+ernships\\b/gi,"Internships"],
+    [/\\ben\\s+ry-level\\b/gi,"entry-level"],
+    [/\\bBuil\\s+a\\b/gi,"Built a"],
+    [/\\bBuil\\s+and\\b/gi,"Built and"],
+    [/\\bBuil\\s+an\\b/gi,"Built an"],
+    [/\\bpla\\s+e\\s+de\\s+ec\\s+or\\b/gi,"plate detector"],
+    [/\\bGi\\s+Hub\\b/gi,"GitHub"],
+    [/\\bAI\\s+Cha\\s+bo\\s+s\\b/gi,"AI Chatbots"],
+    [/\\bSof\\s+ware\\b/gi,"Software"],
+    [/\\bEdi\\s+ing\\b/gi,"Editing"],
+    [/\\bPho\\s+o\\b/gi,"Photo"],
+    [/\\bSmar\\s+India\\b/gi,"Smart India"],
+    [/\\bIn\\s+ernal\\b/gi,"Internal"],
+    [/\\bHacka\\s+hon\\b/gi,"Hackathon"],
+    [/\\b7\\s+h\\b/gi,"7th"],
+    [/\\bSelec\\s+ed\\b/gi,"Selected"],
+    [/\\bExpec\\s+ed\\b/gi,"Expected"],
+    [/\\bChris\\s+ian\\b/gi,"Christian"],
+    [/\\bUniversi\\s+y\\b/gi,"University"],
+    [/\\bAr\\s+ificial\\s+In\\s+elligence\\b/gi,"Artificial Intelligence"],
+    [/\\bGI\\s+HUB\\b/gi,"GITHUB"]
+  ];
+  for(const [re,val] of fixes)s=s.replace(re,val);
+  return s;
+}
+
 async function extractFile(file){
   const ext=file.name.split(".").pop().toLowerCase();
   if(ext==="txt")return await file.text();
@@ -469,7 +527,7 @@ async function extractFile(file){
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js","pdfjsLib");
     window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
     const data=new Uint8Array(await file.arrayBuffer());const pdf=await window.pdfjsLib.getDocument({data}).promise;let pages=[];
-    for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const content=await page.getTextContent();pages.push(content.items.map(x=>x.str).join(" "))}
+    for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const content=await page.getTextContent();pages.push(repairPdfSplitWords(content.items.map(x=>x.str).join(" ")))}
     return pages.join("\n\n");
   }
   if(ext==="docx"){
