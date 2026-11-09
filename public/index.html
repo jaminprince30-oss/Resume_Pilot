@@ -649,18 +649,6 @@ function splitEmbeddedResumeHeadings(text){
     .trim();
 }
 
-function optimizeText")).join("|");
-  const headingPattern=new RegExp("\\b("+escaped+")\\b","gi");
-
-  raw=raw.replace(headingPattern,(match)=>"\\n"+match.toUpperCase()+"\\n");
-
-  return raw
-    .replace(/[ \\t]+/g," ")
-    .replace(/[ \\t]*\\n[ \\t]*/g,"\\n")
-    .replace(/\\n{3,}/g,"\\n\\n")
-    .trim();
-}
-
 function optimizeText(raw){
   const prepared=splitEmbeddedResumeHeadings(raw);
   const rawLines=prepared.split("\n").map(s=>s.trim()).filter(Boolean);
