@@ -194,7 +194,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
     <section class="content" id="builder-page">
       <div class="hero">
         <div><div class="eyebrow">Resume workspace</div><h1>Build a resume that gets read.</h1><p>Add your details and see a clean, ATS-friendly resume take shape as you type. Keep everything factual—no made-up experience or skills.</p></div>
-        <div class="hero-actions"><button class="btn" id="sample-btn">↻ Load example</button><button class="btn soft" id="ai-builder-btn">✦ AI generate / polish</button><div class="dl-group"><select class="dl-format" id="builder-export-format" aria-label="Resume export format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn primary" id="builder-export">⇩ Export</button></div></div>
+        <div class="hero-actions"><button class="btn" id="sample-btn">↻ Load example</button><button class="btn soft" id="ai-builder-btn">✦ AI Polish</button><div class="dl-group"><select class="dl-format" id="builder-export-format" aria-label="Resume download format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn primary" id="builder-export">⇩ Download</button></div></div>
       </div>
 
       <div class="workspace">
@@ -246,15 +246,15 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
 
         <section class="preview-wrap">
           <div class="panel">
-            <div class="panel-head"><div><h2>Resume preview</h2><p>Simple, single-column layout</p></div><div class="dl-group"><select class="dl-format" id="preview-format" aria-label="Resume preview download format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn small soft" id="preview-download">⇩ Download</button></div></div>
+            <div class="panel-head"><div><h2>Resume preview</h2><p>Simple, single-column layout</p></div><span class="preview-meta">Download from the top of the page</span></div>
             <div class="resume-paper" id="resume-preview">
               <div class="empty-preview"><div class="empty-icon">▤</div><strong>Your resume preview will appear here</strong><p>Add your name and details to get started.</p></div>
             </div>
           </div>
-          <p class="disclaimer">Choose PDF, DOCX or TXT from the export or preview download menu to save your resume in a simple, single-column layout.</p>
+          <p class="disclaimer">Use the single Download button above. Before AI Polish, it downloads your resume details. After AI Polish, it downloads the polished AI resume.</p>
           <section class="panel ai-output-panel hidden" id="builder-ai-panel">
             <div class="panel-head"><div><h2>AI-generated resume</h2><p id="builder-ai-meta">Generated using OpenRouter free models</p></div><span class="ai-tag">OPENROUTER · FREE</span></div>
-            <div class="panel-body"><pre id="builder-ai-output"></pre><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="builder-ai-copy">Copy text</button><button class="btn small primary" id="builder-ai-download">Download .txt</button></div><p class="disclaimer">Review every statement before using it. AI must not add qualifications, skills, dates, employers or achievements that you did not provide.</p></div>
+            <div class="panel-body"><pre id="builder-ai-output"></pre><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="builder-ai-copy">Copy text</button></div><p class="disclaimer">Review every statement before using it. AI must not add qualifications, skills, dates, employers or achievements that you did not provide.</p></div>
           </section>
         </section>
       </div>
@@ -399,7 +399,9 @@ function renderEntries(type){
   host.innerHTML=state[type].map((item,i)=>entryTemplate(type,item,i)).join("");
   host.querySelectorAll("[data-entry]").forEach(card=>{
     card.querySelectorAll("[data-key]").forEach(input=>input.addEventListener("input",()=>{
-      state[type][Number(card.dataset.index)][input.dataset.key]=input.value;renderPreview();
+      state[type][Number(card.dataset.index)][input.dataset.key]=input.value;
+      state.optimizedText="";
+      renderPreview();
     }));
     card.querySelector(".remove-entry").addEventListener("click",()=>{
       state[type].splice(Number(card.dataset.index),1);renderEntries(type);renderPreview();
@@ -411,7 +413,11 @@ function addEntry(type){
   state[type].push({...blank[type]});renderEntries(type);renderPreview();
 }
 ["experience","education","projects"].forEach(type=>$(type==="projects"?"add-project":`add-${type}`).addEventListener("click",()=>addEntry(type)));
-document.querySelectorAll("[data-field]").forEach(el=>el.addEventListener("input",()=>{state[el.dataset.field]=el.value;renderPreview()}));
+document.querySelectorAll("[data-field]").forEach(el=>el.addEventListener("input",()=>{
+  state[el.dataset.field]=el.value;
+  state.optimizedText="";
+  renderPreview();
+}));
 function section(title,body){return body?`<section class="resume-section"><h2>${esc(title)}</h2>${body}</section>`:""}
 function bulletHtml(text){const items=cleanBullet(text);return items.length?`<ul class="resume-bullets">${items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
 function renderPreview(){
@@ -454,11 +460,11 @@ function downloadFile(filename,content,type="text/plain"){
   const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
 }
 function downloadBuilderResume(formatId,button){
-  const text=resumeAsText();
+  const text=cleanResumeForExport(state.optimizedText||resumeAsText());
   if(!text.trim()){toast("Add some resume details first.");return}
-  return downloadResume("resume-ats-friendly",text,$(formatId).value,button);
+  const isAiPolished=!!state.optimizedText;
+  return downloadResume(isAiPolished?"resume-ai-polished":"resume-ats-friendly",text,$(formatId).value,button);
 }
-$("preview-download").addEventListener("click",e=>downloadBuilderResume("preview-format",e.currentTarget));
 $("builder-export").addEventListener("click",e=>downloadBuilderResume("builder-export-format",e.currentTarget));
 $("sample-btn").addEventListener("click",()=>{
   Object.assign(state,{fullName:"Jordan Lee",targetTitle:"Junior Data Analyst",email:"jordan.lee@email.com",phone:"+1 555 010 2468",location:"Austin, TX",linkedin:"linkedin.com/in/jordanlee",portfolio:"github.com/jordanlee",summary:"Entry-level data analyst with project experience using Python, SQL and Excel to clean datasets, explore trends and communicate findings. Interested in turning business questions into clear, actionable analysis.",skills:"Python, SQL, Excel, Power BI, data cleaning, data visualization, statistical analysis, communication",certifications:"Google Data Analytics Professional Certificate — Google — 2025",achievements:"Volunteer data coordinator, Campus Sustainability Club"});
@@ -893,17 +899,16 @@ $("ai-builder-btn").addEventListener("click",async()=>{
   const data=await callResumeAI("generate",text,"");
   setButtonBusy(button,false);
   if(!data)return;
-  $("builder-ai-output").textContent=data.result;
-  $("builder-ai-meta").textContent="Generated with "+(data.model||"OpenRouter free model");
+  const polished=cleanResumeForExport(data.resume||data.result||"");
+  state.optimizedText=polished;
+  $("builder-ai-output").textContent=polished;
+  $("builder-ai-meta").textContent="AI polished with "+(data.model||"OpenRouter free model");
   $("builder-ai-panel").classList.remove("hidden");
   $("builder-ai-panel").scrollIntoView({behavior:"smooth",block:"start"});
 });
 $("builder-ai-copy").addEventListener("click",async()=>{
   try{await navigator.clipboard.writeText($("builder-ai-output").textContent);toast("AI resume copied.")}
   catch(e){toast("Clipboard unavailable. Select the text to copy.")}
-});
-$("builder-ai-download").addEventListener("click",()=>{
-  const text=$("builder-ai-output").textContent;if(text)downloadFile("ai-generated-resume.txt",text);
 });
 $("ai-check-btn").addEventListener("click",async()=>{
   const text=state.lastResumeText||$("resume-text").value.trim();
