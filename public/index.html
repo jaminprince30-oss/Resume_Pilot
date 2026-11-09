@@ -224,17 +224,17 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
             <hr class="sep">
             <div class="section-title"><h3>Work experience</h3><span>Newest first</span></div>
             <div id="experience-list"></div>
-            <button type="button" class="add-link" id="add-experience" onclick="addEntry('experience'); return false;">＋ Add experience</button>
+            <button type="button" class="add-link" id="add-experience">＋ Add experience</button>
 
             <hr class="sep">
             <div class="section-title"><h3>Education</h3><span>Newest first</span></div>
             <div id="education-list"></div>
-            <button type="button" class="add-link" id="add-education" onclick="addEntry('education'); return false;">＋ Add education</button>
+            <button type="button" class="add-link" id="add-education">＋ Add education</button>
 
             <hr class="sep">
             <div class="section-title"><h3>Projects</h3><span>Show what you built</span></div>
-            <div id="project-list"></div>
-            <button type="button" class="add-link" id="add-project" onclick="addEntry('projects'); return false;">＋ Add project</button>
+            <div id="projects-list"></div>
+            <button type="button" class="add-link" id="add-project">＋ Add project</button>
 
             <hr class="sep">
             <div class="section-title"><h3>Certifications & achievements</h3><span>Optional</span></div>
@@ -413,7 +413,7 @@ function addEntry(type){
   const blank={experience:{role:"",company:"",location:"",dates:"",bullets:""},education:{degree:"",school:"",location:"",dates:"",details:""},projects:{name:"",tools:"",link:"",bullets:""}};
   state[type].push({...blank[type]});renderEntries(type);renderPreview();
 }
-["experience","education"].forEach(type=>$(type==="projects"?"add-project":`add-${type}`).addEventListener("click",e=>{e.preventDefault();addEntry(type);}));
+["experience","education","projects"].forEach(type=>$(type==="projects"?"add-project":`add-${type}`).addEventListener("click",e=>{e.preventDefault();addEntry(type);}));
 document.querySelectorAll("[data-field]").forEach(el=>el.addEventListener("input",()=>{
   state[el.dataset.field]=el.value;
   state.optimizedText="";
@@ -642,7 +642,7 @@ function runAnalysis(){
 
 }
 $("analyze-btn").addEventListener("click",runAnalysis);
-$("clear-checker").addEventListener("click",()=>{$("resume-text").value="";$("job-description").value="";$("resume-file").value="";$("file-name").textContent="";$("check-results").classList.remove("show");$("optimized-panel").classList.remove("show");$("ai-check-panel").classList.remove("show");$("ai-check-output").textContent="";state.lastResumeText="";state.optimizedText="";toast("Checker cleared.")});
+$("clear-checker").addEventListener("click",()=>{$("resume-text").value="";$("job-description").value="";$("resume-file").value="";$("file-name").textContent="";$("check-results").classList.remove("show");($("optimized-panel")||{classList:{remove(){}}}).classList.remove("show");$("ai-check-panel").classList.remove("show");$("ai-check-output").textContent="";state.lastResumeText="";state.optimizedText="";toast("Checker cleared.")});
 function canonicalSection(line){
   const s=line.trim().replace(/[:：]+$/,"").toLowerCase();
   if(/^(professional )?(summary|profile|objective|career objective)$/.test(s))return "Professional Summary";
