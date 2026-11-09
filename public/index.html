@@ -178,8 +178,8 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
     <div>
       <div class="nav-label">Workspace</div>
       <nav class="nav" aria-label="Main navigation">
-        <button class="active" data-page="builder"><span class="nav-icon">✎</span> Resume Builder</button>
-        <button data-page="checker"><span class="nav-icon">✓</span> ATS Checker</button>
+        <button class="active" data-page="builder" type="button" onclick="document.getElementById('builder-page').classList.remove('hidden');document.getElementById('checker-page').classList.add('hidden');document.querySelectorAll('[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page==='builder')});document.getElementById('top-title').textContent='Resume Builder';window.scrollTo(0,0);"><span class="nav-icon">✎</span> Resume Builder</button>
+        <button data-page="checker" type="button" onclick="document.getElementById('builder-page').classList.add('hidden');document.getElementById('checker-page').classList.remove('hidden');document.querySelectorAll('[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page==='checker')});document.getElementById('top-title').textContent='ATS Checker';window.scrollTo(0,0);"><span class="nav-icon">✓</span> ATS Checker</button>
       </nav>
     </div>
     <div class="side-note"><strong>Designed for ATS parsing</strong>Simple sections, readable text, standard headings and a clean single-column layout.</div>
