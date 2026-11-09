@@ -268,7 +268,7 @@ function buildPrompt(mode, resumeText, jobDescription) {
   };
 }
 
-async function callOpenRouter(model, prompt) {
+async function callOpenRouter(model, prompt, env) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 50000);
 
@@ -343,7 +343,7 @@ async function handler(event, env) {
 
   let upstream;
   try {
-    upstream = await callOpenRouter(model, prompt);
+    upstream = await callOpenRouter(model, prompt, env);
   } catch (error) {
     return response(502, {
       error: error && error.name === "AbortError"
