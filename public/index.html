@@ -580,22 +580,14 @@ function splitEmbeddedResumeHeadings(text){
     "END OF RESUME",
     "END RESUME"
   ];
-  const escaped=headings.map(h=>h.replace(/[.*+?^()|[\\]\\]/g,"\\function splitEmbeddedResumeHeadings(text){
-  let raw=String(text||"").replace(/\r/g,"").replace(/\uFEFF/g,"").trim();
-  if(!raw)return "";
-  const headings=[
-    "PROFESSIONAL SUMMARY","SKILLS","TECHNICAL SKILLS","WORK EXPERIENCE",
-    "PROJECTS","EDUCATION","CERTIFICATIONS","ACHIEVEMENTS & ACTIVITIES",
-    "ACHIEVEMENTS","RESUME DETAILS","RESUME INFORMATION","END OF RESUME","END RESUME"
-  ];
-  const escaped=headings.map(h=>h.replace(/[.*+?^()|[\\]\\]/g,"\\$&")).join("|");
-  raw=raw.replace(new RegExp("(?:^|[ \\t|])("+escaped+")(?=[ \\t|:]|$)","gi"),(match,heading)=>{
-    return "\n"+heading.toUpperCase()+"\n";
-  });
+  const headingPattern=new RegExp("\\b("+headings.join("|")+")\\b","gi");
+
+  raw=raw.replace(headingPattern,(match)=>"\\n"+match.toUpperCase()+"\\n");
+
   return raw
     .replace(/[ \\t]+/g," ")
-    .replace(/[ \\t]*\n[ \\t]*/g,"\n")
-    .replace(/\n{3,}/g,"\n\n")
+    .replace(/[ \\t]*\\n[ \\t]*/g,"\\n")
+    .replace(/\\n{3,}/g,"\\n\\n")
     .trim();
 }
 
