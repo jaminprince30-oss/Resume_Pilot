@@ -203,7 +203,7 @@ function fallbackSplit(text) {
 
 function extractPartialJsonStringField(text, fieldName) {
   const raw = String(text || "");
-  const marker = new RegExp('["'] + fieldName + '["']\\s*:\\s*["']');
+  const marker = new RegExp('"' + fieldName + '"\\s*:\\s*"');
   const match = raw.match(marker);
   if (!match || match.index === undefined) return "";
 
