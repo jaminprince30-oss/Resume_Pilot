@@ -286,7 +286,7 @@ async function callOpenRouter(model, prompt, env) {
           { role: "user", content: prompt.user }
         ],
         temperature: 0.2,
-        max_tokens: 3500
+        max_tokens: 6000
       }),
       signal: controller.signal
     });
