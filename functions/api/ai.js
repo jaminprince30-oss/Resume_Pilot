@@ -1,6 +1,9 @@
 const MAX_TEXT_CHARS = 35000;
 
 function response(statusCode, body) {
+  if (body && typeof body.error === "string") {
+    body = { ...body, error: body.error.replace(/open\s*-?router(\.ai)?/gi, "the AI service") };
+  }
   return {
     statusCode,
     headers: {
@@ -378,12 +381,12 @@ async function callOpenRouter(model, prompt, env) {
 }
 
 function safeErrorMessage(status, providerMessage) {
-  if (status === 401) return "OpenRouter authentication failed (HTTP 401). Check the Cloudflare Pages API key.";
-  if (status === 402) return "OpenRouter returned HTTP 402 (payment/credit requirement).";
-  if (status === 403) return "OpenRouter returned HTTP 403 (access denied).";
-  if (status === 429) return "OpenRouter rate limit/free-model limit reached (HTTP 429).";
-  if (status >= 500) return `OpenRouter/provider error (HTTP ${status}).`;
-  return `OpenRouter request failed (HTTP ${status}). ${providerMessage || "No provider message returned."}`;
+  if (status === 401) return "AI service authentication failed (HTTP 401). Check the server configuration.";
+  if (status === 402) return "AI service returned HTTP 402 (payment/credit requirement).";
+  if (status === 403) return "AI service returned HTTP 403 (access denied).";
+  if (status === 429) return "AI service rate limit reached (HTTP 429).";
+  if (status >= 500) return `AI service error (HTTP ${status}).`;
+  return `AI service request failed (HTTP ${status}). ${providerMessage || "No provider message returned."}`;
 }
 
 async function handler(event, env) {
@@ -393,7 +396,7 @@ async function handler(event, env) {
 
   if (!env.OPENROUTER_API_KEY) {
     return response(500, {
-      error: "OpenRouter is not configured. Add the OpenRouter API key in Cloudflare Pages environment variables."
+      error: "The AI service is not configured. Please contact the site owner."
     });
   }
 
@@ -429,8 +432,8 @@ async function handler(event, env) {
   } catch (error) {
     return response(502, {
       error: error && error.name === "AbortError"
-        ? "OpenRouter request timed out."
-        : `Unable to reach OpenRouter: ${error.message || "Unknown network error."}`
+        ? "AI service request timed out."
+        : `Unable to reach the AI service: ${error.message || "Unknown network error."}`
     });
   }
 
@@ -446,7 +449,7 @@ async function handler(event, env) {
       diagnostics: {
         functionReached: true,
         apiKeyPresent: true,
-        openRouterStatus: upstream.status
+        aiStatus: upstream.status
       }
     });
   }
@@ -469,14 +472,14 @@ async function handler(event, env) {
     const providerReason = data?.choices?.[0]?.error?.message || data?.error?.message;
     return response(502, {
       error: providerReason
-        ? `OpenRouter returned no usable AI content: ${providerReason}`
+        ? `AI service returned no usable AI content: ${providerReason}`
         : finishReason
-          ? `OpenRouter returned no usable AI content (finish reason: ${finishReason}).`
-          : "OpenRouter returned no usable AI content.",
+          ? `AI service returned no usable AI content (finish reason: ${finishReason}).`
+          : "AI service returned no usable AI content.",
       diagnostics: {
         functionReached: true,
         apiKeyPresent: true,
-        openRouterStatus: upstream.status,
+        aiStatus: upstream.status,
         finishReason: finishReason || null
       }
     });
@@ -491,7 +494,7 @@ async function handler(event, env) {
       diagnostics: {
         functionReached: true,
         apiKeyPresent: true,
-        openRouterStatus: upstream.status
+        aiStatus: upstream.status
       }
     });
   }
@@ -500,11 +503,10 @@ async function handler(event, env) {
     result: normalized.resume,
     resume: normalized.resume,
     analysis: normalized.analysis,
-    model: data.model || model,
     diagnostics: {
       functionReached: true,
       apiKeyPresent: true,
-      openRouterStatus: upstream.status
+      aiStatus: upstream.status
     }
   });
 };
