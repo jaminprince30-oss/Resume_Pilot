@@ -254,7 +254,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
           </div>
           <p class="disclaimer">Use the single Download button above. Before AI Polish, it downloads your resume details. After AI Polish, it downloads the polished AI resume.</p>
           <section class="panel ai-output-panel hidden" id="builder-ai-panel">
-            <div class="panel-head"><div><h2>AI-generated resume</h2><p id="builder-ai-meta">Generated using OpenRouter free models</p></div><span class="ai-tag">OPENROUTER · FREE</span></div>
+            <div class="panel-head"><div><h2>AI-generated resume</h2><p id="builder-ai-meta">Generated using AI</p></div><span class="ai-tag">AI</span></div>
             <div class="panel-body"><pre id="builder-ai-output"></pre><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="builder-ai-copy">Copy text</button></div><p class="disclaimer">Review every statement before using it. AI must not add qualifications, skills, dates, employers or achievements that you did not provide.</p></div>
           </section>
         </section>
@@ -280,12 +280,12 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
               <div class="field"><label for="resume-text">Resume text</label><textarea class="check-textarea" id="resume-text" placeholder="Paste the text from your resume here..."></textarea></div>
               <div class="field" style="margin-top:15px"><label for="job-description">Target job description (optional, improves keyword analysis)</label><textarea class="check-textarea" id="job-description" style="min-height:130px" placeholder="Paste the job description here to compare important skills and terms."></textarea></div>
               <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:16px"><button class="btn primary" id="analyze-btn">Analyze resume →</button><button class="btn" id="clear-checker">Clear</button></div>
-              <div class="disclaimer">Privacy: file text is processed locally in this browser. PDF/DOCX reading loads open-source parsing libraries from a CDN, so an internet connection is needed for those formats. You can always paste plain text instead.</div><div class="disclaimer"><strong>AI privacy:</strong> When you choose an AI feature, the resume text and optional job description are sent to OpenRouter and the selected model provider for processing. Do not submit information you are not comfortable sharing. Your API key stays on the server.</div>
+              <div class="disclaimer">Privacy: file text is processed locally in this browser. PDF/DOCX reading loads open-source parsing libraries from a CDN, so an internet connection is needed for those formats. You can always paste plain text instead.</div><div class="disclaimer"><strong>AI privacy:</strong> When you choose an AI feature, the resume text and optional job description are sent to our AI service provider for processing. Do not submit information you are not comfortable sharing. Your API key stays on the server.</div>
             </div>
           </section>
 
           <section class="panel optimized ai-output-panel" id="ai-check-panel">
-            <div class="panel-head"><div><h2>AI Review</h2><p id="ai-check-meta">ATS analysis and a separate final improved resume.</p></div><span class="ai-tag">OPENROUTER · FREE</span></div>
+            <div class="panel-head"><div><h2>AI Review</h2><p id="ai-check-meta">ATS analysis and a separate final improved resume.</p></div><span class="ai-tag">AI</span></div>
             <div class="panel-body">
               <div class="ai-analysis-card">
                 <div class="ai-analysis-title">ATS Analysis</div>
@@ -868,10 +868,10 @@ async function downloadResume(baseName,text,format,button){
   }catch(e){toast(e.message||"Could not create the file. Try TXT instead.")}
   finally{setButtonBusy(button,false)}
 }
-/* OpenRouter AI integration: the API key is kept server-side in OPENROUTER_API_KEY. */
+/* AI integration: credentials are kept server-side. */
 async function callResumeAI(mode, resumeText, jobDescription=""){
   if(!resumeText || !resumeText.trim()){toast("Add or upload resume details first.");return null}
-  const consent=window.confirm("This sends the resume text"+(jobDescription.trim()?" and job description":"")+" to OpenRouter and its selected AI provider for processing. Continue?");
+  const consent=window.confirm("This sends the resume text"+(jobDescription.trim()?" and job description":"")+" to our AI service provider for processing. Continue?");
   if(!consent)return null;
   try{
     const response=await fetch("/api/ai",{
@@ -884,7 +884,7 @@ async function callResumeAI(mode, resumeText, jobDescription=""){
     if(!data.result)throw new Error("The AI provider returned an empty response. Please try again.");
     return data;
   }catch(error){
-    toast(error.message||"Could not connect to OpenRouter.");
+    toast(error.message||"Could not connect to the AI service.");
     return null;
   }
 }
@@ -903,7 +903,7 @@ $("ai-builder-btn").addEventListener("click",async()=>{
   const polished=cleanResumeForExport(data.resume||data.result||"");
   state.optimizedText=polished;
   $("builder-ai-output").textContent=polished;
-  $("builder-ai-meta").textContent="AI polished with "+(data.model||"OpenRouter free model");
+  $("builder-ai-meta").textContent="AI polished";
   $("builder-ai-panel").classList.remove("hidden");
   $("builder-ai-panel").scrollIntoView({behavior:"smooth",block:"start"});
 });
@@ -930,7 +930,7 @@ $("ai-check-btn").addEventListener("click",async()=>{
   state.optimizedText=finalResume;
   $("ai-check-output").textContent=finalResume;
   $("ai-check-analysis").textContent=analysis;
-  $("ai-check-meta").textContent="AI reviewed, improved and ATS-formatted with "+(data.model||"OpenRouter free model")+(jd?" · Job description included":"");
+  $("ai-check-meta").textContent="AI reviewed, improved and ATS-formatted"+(jd?" · Job description included":"");
   $("ai-check-panel").classList.add("show");
   $("ai-check-panel").scrollIntoView({behavior:"smooth",block:"start"});
 });
