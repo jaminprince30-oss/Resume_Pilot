@@ -1,6 +1,5 @@
-# ResumePilot — Cloudflare Pages + OpenRouter
-
-Responsive ATS resume builder/checker with OpenRouter AI features deployed using Cloudflare Pages.
+# ResumePilot
+Responsive ATS resume builder/checker with AI features 
 
 ## Live website
 
@@ -59,8 +58,7 @@ The AI endpoint is `/api/ai`.
 
 - Resume data stays in the browser unless a user explicitly starts an AI action.
 - When an AI action is confirmed, resume text and any job description are sent to OpenRouter and the selected upstream model provider for processing.
-- The OpenRouter API key stays in a Cloudflare server-side secret.
 - The app does not save resume text to its own database.
-- Free model availability, speed, quality and rate limits can change. `openrouter/free` selects an available free model when one is available; it does not guarantee unlimited requests.
+- Free model availability, speed, quality and rate limits can change.
 - The ATS score is a heuristic checklist, not a prediction from a specific employer's ATS.
 - AI must not invent experience or credentials; review all generated content before using it.
