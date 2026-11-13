@@ -657,6 +657,19 @@ function compareAtsResults(beforeText,afterText,jobDescription=""){
     after:Math.round(metricValue(after,m.key)/m.max*100)
   }))};
 }
+function improvementGuidance(comparison){
+  const after=comparison.after;
+  const tips=[];
+  if(after.impactScore<12)tips.push("Add truthful project or work outcomes: scope, users served, tasks completed, time saved or results measured. Ask the candidate for real numbers; never invent them.");
+  if(after.readabilityScore<8)tips.push("Check whether short or vague experience bullets can be expanded with specific responsibilities and tools you genuinely used.");
+  if(after.sectionScore<25)tips.push("Add missing standard sections where relevant, using clear headings and factual content.");
+  if(after.jdTokens.length===0)tips.push("Paste the target job description to evaluate relevance to a specific role; keyword relevance is currently not scored.");
+  else if(after.keywordScore<15)tips.push("Review job-description terms missing from the resume. Add them only when supported by your actual experience.");
+  if(comparison.delta<=0)tips.unshift("AI rewriting did not increase the checklist score. This is not necessarily a failure: rewording alone may not change measurable criteria.");
+  if(!tips.length)tips.push("The checklist is strong. Focus on accuracy, role-specific evidence and recruiter clarity rather than chasing points.");
+  return '<div class="tip-box"><strong>What would actually help?</strong><ul style="padding-left:18px;margin:9px 0 0">'+
+    tips.map(t=>'<li style="margin-bottom:6px">'+esc(t)+'</li>').join("")+'</ul></div>';
+}
 function renderAtsComparison(id,beforeText,afterText,jobDescription=""){
   const target=$(id);
   if(!afterText.trim()){target.textContent="";return null}
@@ -670,7 +683,8 @@ function renderAtsComparison(id,beforeText,afterText,jobDescription=""){
     '<span class="score-delta">'+trend+(delta===0?'':" points")+'</span></div>'+
     '<table><thead><tr><th scope="col">Metric</th><th scope="col">Before</th><th scope="col">After</th></tr></thead><tbody>'+rows+'</tbody></table>'+
     '<p class="disclaimer">'+(comparison.before.jdTokens.length?'Job-description terms were compared in both versions.':'No job description: keyword relevance is excluded from both scores.')+
-    ' This is a heuristic text checklist, not an employer ATS assessment or a hiring guarantee. AI changes can increase, decrease or leave the score unchanged.</p>';
+    ' This is a heuristic text checklist, not an employer ATS assessment or a hiring guarantee. AI changes can increase, decrease or leave the score unchanged.</p>'+
+    improvementGuidance(comparison);
   return comparison;
 }
 function showChecklistScore(result,aiUpdated=false){
