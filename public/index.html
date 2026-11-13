@@ -338,6 +338,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
               <div class="score-ring" id="score-ring" style="--score:0%"><span><span id="score-number">—</span><small>ATS score</small></span></div>
               <div><div class="score-label" id="score-label">Awaiting resume</div><div class="score-caption" id="score-caption">Add a resume and run the check.</div></div>
             </div>
+            <div id="score-after-ai-summary" class="ats-comparison" aria-live="polite"></div>
             <div class="check-results" id="check-results">
               <div class="metric"><div class="metric-head"><span>Contact details</span><span id="contact-value">—</span></div><div class="bar"><span id="contact-bar"></span></div></div>
               <div class="metric"><div class="metric-head"><span>Sections & structure</span><span id="sections-value">—</span></div><div class="bar"><span id="sections-bar"></span></div></div>
@@ -672,17 +673,38 @@ function renderAtsComparison(id,beforeText,afterText,jobDescription=""){
     ' This is a heuristic text checklist, not an employer ATS assessment or a hiring guarantee. AI changes can increase, decrease or leave the score unchanged.</p>';
   return comparison;
 }
+function showChecklistScore(result,aiUpdated=false){
+  $("score-number").textContent=result.score;
+  $("score-ring").style.setProperty("--score",result.score+"%");
+  $("score-label").textContent=aiUpdated?"AI-reviewed checklist":result.score>=80?"Strong ATS basics":result.score>=60?"Room to improve":"Needs attention";
+  $("score-caption").textContent=result.wordCount+" words · "+(aiUpdated?"after AI · ":"heuristic checklist · ")+(result.jdTokens.length?"job terms compared":"no job description");
+  setMetric("contact",result.contactScore,15);
+  setMetric("sections",result.sectionScore,25);
+  if(result.jdTokens.length)setMetric("keywords",result.keywordScore,20);
+  else{$("keywords-value").textContent="N/A";$("keywords-bar").style.width="0%"}
+  setMetric("impact",result.impactScore+result.readabilityScore,25);
+  setMetric("format",result.formatScore,15);
+}
+function showReviewScoreSummary(comparison){
+  const before=comparison.before.score,after=comparison.after.score;
+  const difference=after-before;
+  const change=difference>0?"+"+difference:difference===0?"No change":String(difference);
+  const note=difference>0?"Checklist score increased.":difference<0?"Checklist score decreased; review the comparison for possible lost details.":"Checklist score did not change; review content quality separately.";
+  $("score-after-ai-summary").innerHTML='<h3>Before vs. after AI Review</h3><div class="scores">'+
+    '<div><small>Original</small><div class="score-amount">'+before+'/100</div></div>'+
+    '<span aria-hidden="true">→</span><div><small>AI-reviewed</small><div class="score-amount">'+after+'/100</div></div>'+
+    '<span class="score-delta">'+change+(difference===0?'':" pts")+'</span></div>'+
+    '<p class="disclaimer">'+note+' The ring and metric bars now show the AI-reviewed version. This is a heuristic, not a hiring prediction.</p>';
+}
 function setMetric(name,value,max){$(name+"-value").textContent=Math.round(value/max*100)+"%";$(name+"-bar").style.width=Math.max(0,Math.min(100,value/max*100))+"%"}
 function runAnalysis(){
   const text=$("resume-text").value.trim();if(!text){toast("Upload a resume or paste its text first.");return}
   state.lastResumeText=text;
   $("checker-ats-comparison").textContent="";
   const r=analyze(text,$("job-description").value);
-  $("score-number").textContent=r.score;$("score-ring").style.setProperty("--score",r.score+"%");
-  $("score-label").textContent=r.score>=80?"Strong ATS basics":r.score>=60?"Room to improve":"Needs attention";
-  $("score-caption").textContent=`${r.wordCount} words · heuristic checklist`+(r.jdTokens.length?" · job terms compared":" · no job description");
+  $("score-after-ai-summary").textContent="";
+  showChecklistScore(r);
   $("check-results").classList.add("show");
-  setMetric("contact",r.contactScore,15);setMetric("sections",r.sectionScore,25);if(r.jdTokens.length)setMetric("keywords",r.keywordScore,20);else{$("keywords-value").textContent="N/A";$("keywords-bar").style.width="0%"}setMetric("impact",r.impactScore+r.readabilityScore,25);setMetric("format",r.formatScore,15);
   $("result-list").innerHTML=r.checks.map(c=>`<div class="result-row ${c.ok?"good":"warn"}"><div class="status">${c.ok?"✓":"!"}</div><div><strong>${esc(c.title)}</strong><p>${esc(c.detail)}</p></div></div>`).join("");
   if(r.jdTokens.length){
     const missing=r.jdTokens.filter(w=>!r.present.includes(w)).slice(0,8);
@@ -691,7 +713,7 @@ function runAnalysis(){
 
 }
 $("analyze-btn").addEventListener("click",runAnalysis);
-$("clear-checker").addEventListener("click",()=>{$("resume-text").value="";$("job-description").value="";$("resume-file").value="";$("file-name").textContent="";$("check-results").classList.remove("show");($("optimized-panel")||{classList:{remove(){}}}).classList.remove("show");$("ai-check-panel").classList.remove("show");$("checker-ats-comparison").textContent="";$("ai-check-output").textContent="";state.lastResumeText="";state.optimizedText="";toast("Checker cleared.")});
+$("clear-checker").addEventListener("click",()=>{$("resume-text").value="";$("job-description").value="";$("resume-file").value="";$("file-name").textContent="";$("check-results").classList.remove("show");($("optimized-panel")||{classList:{remove(){}}}).classList.remove("show");$("ai-check-panel").classList.remove("show");$("checker-ats-comparison").textContent="";$("score-after-ai-summary").textContent="";$("score-number").textContent="—";$("score-ring").style.setProperty("--score","0%");$("score-label").textContent="Awaiting resume";$("score-caption").textContent="Add a resume and run the check.";$("ai-check-output").textContent="";state.lastResumeText="";state.optimizedText="";toast("Checker cleared.")});
 function canonicalSection(line){
   const s=line.trim().replace(/[:：]+$/,"").toLowerCase();
   if(/^(professional )?(summary|profile|objective|career objective)$/.test(s))return "Professional Summary";
@@ -978,7 +1000,11 @@ $("ai-check-btn").addEventListener("click",async()=>{
 
   const finalResume=cleanResumeForExport(data.resume||data.result||"");
   if(!finalResume.trim()){toast("AI did not return a usable resume.");return}
-  renderAtsComparison("checker-ats-comparison",text,finalResume,jd);
+  const comparison=renderAtsComparison("checker-ats-comparison",text,finalResume,jd);
+  if(comparison){
+    showChecklistScore(comparison.after,true);
+    showReviewScoreSummary(comparison);
+  }
   const analysis=data.analysis||"No separate AI analysis was returned.";
   state.optimizedText=finalResume;
   $("ai-check-output").textContent=finalResume;
