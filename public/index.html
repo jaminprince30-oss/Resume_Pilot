@@ -138,6 +138,15 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
 
 .ai-output-panel{margin-top:14px}
 .ai-output-panel pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#fbfcff;border:1px solid var(--line);border-radius:10px;padding:14px;font:11px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;max-height:560px;overflow:auto}
+.ats-comparison:not(:empty){margin-bottom:16px;border:1px solid var(--line);border-radius:12px;padding:15px;background:#fbfcff}
+.ats-comparison h3{font-size:13px;margin:0 0 9px}
+.ats-comparison .scores{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.ats-comparison .score-amount{font-size:23px;font-weight:850}
+.ats-comparison .score-delta{font-weight:750}
+.ats-comparison table{width:100%;border-collapse:collapse;font-size:11px}
+.ats-comparison th,.ats-comparison td{padding:6px;border-bottom:1px solid var(--line);text-align:left}
+.ats-comparison th:not(:first-child),.ats-comparison td:not(:first-child){text-align:right}
+.ats-comparison .disclaimer{margin-top:9px}
 .ai-analysis-card,.ai-final-card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px;margin-bottom:14px}
 .ai-final-card{background:#fbfcff}
 .ai-analysis-title{font-size:13px;font-weight:850;margin-bottom:3px}
@@ -255,7 +264,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
           <p class="disclaimer">Use the single Download button above. Before AI Polish, it downloads your resume details. After AI Polish, it downloads the polished AI resume.</p>
           <section class="panel ai-output-panel hidden" id="builder-ai-panel">
             <div class="panel-head"><div><h2>AI-generated resume</h2><p id="builder-ai-meta">Generated using AI</p></div><span class="ai-tag">AI</span></div>
-            <div class="panel-body"><pre id="builder-ai-output"></pre><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="builder-ai-copy">Copy text</button></div><p class="disclaimer">Review every statement before using it. AI must not add qualifications, skills, dates, employers or achievements that you did not provide.</p></div>
+            <div class="panel-body"><div id="builder-ats-comparison" class="ats-comparison" aria-live="polite"></div><pre id="builder-ai-output"></pre><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="builder-ai-copy">Copy text</button></div><p class="disclaimer">Review every statement before using it. AI must not add qualifications, skills, dates, employers or achievements that you did not provide.</p></div>
           </section>
         </section>
       </div>
@@ -287,6 +296,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
           <section class="panel optimized ai-output-panel" id="ai-check-panel">
             <div class="panel-head"><div><h2>AI Review</h2><p id="ai-check-meta">ATS analysis and a separate final improved resume.</p></div><span class="ai-tag">AI</span></div>
             <div class="panel-body">
+              <div id="checker-ats-comparison" class="ats-comparison" aria-live="polite"></div>
               <div class="ai-analysis-card">
                 <div class="ai-analysis-title">ATS Analysis</div>
                 <div class="ai-analysis-sub">Strengths, weaknesses, missing information and suggested improvements.</div>
@@ -629,10 +639,44 @@ function analyze(text,jd){
   checks.push({ok:wordCount>=250&&wordCount<=1000,title:"Resume length",detail:wordCount>=250&&wordCount<=1000?`${wordCount} words detected; this is within a common range, depending on career stage.`:`${wordCount} words detected. Review for missing detail or unnecessary length; the right length depends on experience.`});
   return {score,contactScore,sectionScore,keywordScore,impactScore,formatScore,readabilityScore,checks,wordCount,found,jdTokens,present,availablePoints};
 }
+// Compare the exact before/after text with one job description and one scoring algorithm.
+function compareAtsResults(beforeText,afterText,jobDescription=""){
+  const before=analyze(beforeText,jobDescription);
+  const after=analyze(afterText,jobDescription);
+  const metrics=[
+    {label:"Contact details",key:"contactScore",max:15},
+    {label:"Sections & structure",key:"sectionScore",max:25},
+    ...(before.jdTokens.length?[{label:"Keyword relevance",key:"keywordScore",max:20}]:[]),
+    {label:"Impact & readability",key:"impactReadabilityScore",max:25},
+    {label:"Formatting signals",key:"formatScore",max:15}
+  ];
+  const metricValue=(score,key)=>key==="impactReadabilityScore"?score.impactScore+score.readabilityScore:score[key];
+  return {before,after,delta:after.score-before.score,metrics:metrics.map(m=>({
+    label:m.label,before:Math.round(metricValue(before,m.key)/m.max*100),
+    after:Math.round(metricValue(after,m.key)/m.max*100)
+  }))};
+}
+function renderAtsComparison(id,beforeText,afterText,jobDescription=""){
+  const target=$(id);
+  if(!afterText.trim()){target.textContent="";return null}
+  const comparison=compareAtsResults(beforeText,afterText,jobDescription);
+  const delta=comparison.delta;
+  const trend=delta>0?"+"+delta:delta===0?"No change":String(delta);
+  const rows=comparison.metrics.map(m=>"<tr><td>"+esc(m.label)+"</td><td>"+m.before+"%</td><td>"+m.after+"%</td></tr>").join("");
+  target.innerHTML='<h3>ATS checklist: Before vs. after AI</h3>'+
+    '<div class="scores"><div><small>Before</small><div class="score-amount">'+comparison.before.score+'/100</div></div>'+
+    '<span aria-hidden="true">→</span><div><small>After</small><div class="score-amount">'+comparison.after.score+'/100</div></div>'+
+    '<span class="score-delta">'+trend+(delta===0?'':" points")+'</span></div>'+
+    '<table><thead><tr><th scope="col">Metric</th><th scope="col">Before</th><th scope="col">After</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<p class="disclaimer">'+(comparison.before.jdTokens.length?'Job-description terms were compared in both versions.':'No job description: keyword relevance is excluded from both scores.')+
+    ' This is a heuristic text checklist, not an employer ATS assessment or a hiring guarantee. AI changes can increase, decrease or leave the score unchanged.</p>';
+  return comparison;
+}
 function setMetric(name,value,max){$(name+"-value").textContent=Math.round(value/max*100)+"%";$(name+"-bar").style.width=Math.max(0,Math.min(100,value/max*100))+"%"}
 function runAnalysis(){
   const text=$("resume-text").value.trim();if(!text){toast("Upload a resume or paste its text first.");return}
   state.lastResumeText=text;
+  $("checker-ats-comparison").textContent="";
   const r=analyze(text,$("job-description").value);
   $("score-number").textContent=r.score;$("score-ring").style.setProperty("--score",r.score+"%");
   $("score-label").textContent=r.score>=80?"Strong ATS basics":r.score>=60?"Room to improve":"Needs attention";
@@ -647,7 +691,7 @@ function runAnalysis(){
 
 }
 $("analyze-btn").addEventListener("click",runAnalysis);
-$("clear-checker").addEventListener("click",()=>{$("resume-text").value="";$("job-description").value="";$("resume-file").value="";$("file-name").textContent="";$("check-results").classList.remove("show");($("optimized-panel")||{classList:{remove(){}}}).classList.remove("show");$("ai-check-panel").classList.remove("show");$("ai-check-output").textContent="";state.lastResumeText="";state.optimizedText="";toast("Checker cleared.")});
+$("clear-checker").addEventListener("click",()=>{$("resume-text").value="";$("job-description").value="";$("resume-file").value="";$("file-name").textContent="";$("check-results").classList.remove("show");($("optimized-panel")||{classList:{remove(){}}}).classList.remove("show");$("ai-check-panel").classList.remove("show");$("checker-ats-comparison").textContent="";$("ai-check-output").textContent="";state.lastResumeText="";state.optimizedText="";toast("Checker cleared.")});
 function canonicalSection(line){
   const s=line.trim().replace(/[:：]+$/,"").toLowerCase();
   if(/^(professional )?(summary|profile|objective|career objective)$/.test(s))return "Professional Summary";
@@ -906,6 +950,8 @@ $("ai-builder-btn").addEventListener("click",async()=>{
   setButtonBusy(button,false);
   if(!data)return;
   const polished=cleanResumeForExport(data.resume||data.result||"");
+  if(!polished.trim()){toast("AI did not return a usable resume.");return}
+  renderAtsComparison("builder-ats-comparison",text,polished);
   state.optimizedText=polished;
   $("builder-ai-output").textContent=polished;
   $("builder-ai-meta").textContent="AI polished";
@@ -931,6 +977,8 @@ $("ai-check-btn").addEventListener("click",async()=>{
   if(!data)return;
 
   const finalResume=cleanResumeForExport(data.resume||data.result||"");
+  if(!finalResume.trim()){toast("AI did not return a usable resume.");return}
+  renderAtsComparison("checker-ats-comparison",text,finalResume,jd);
   const analysis=data.analysis||"No separate AI analysis was returned.";
   state.optimizedText=finalResume;
   $("ai-check-output").textContent=finalResume;
