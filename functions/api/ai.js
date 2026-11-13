@@ -280,6 +280,47 @@ function normalizeAiResult(text) {
   return fallbackSplit(text);
 }
 
+
+// Reject clear factual drift before an AI-generated resume reaches the user.
+// This is a conservative safety net, not a proof that every claim is accurate.
+function resumeFactWarnings(source, output) {
+  const original = cleanText(source);
+  const revised = cleanText(output);
+  const warnings = [];
+  const normalized = value => value.toLowerCase().replace(/\s+/g, " ").trim();
+  const extract = (text, regex) => [...new Set((text.match(regex) || []).map(normalized))];
+
+  for (const email of extract(original, /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi)) {
+    if (!normalized(revised).includes(email)) warnings.push("An email address was removed or changed.");
+  }
+  // Compare actual web links where recognizable; avoid treating bare domain-like words as URLs.
+  for (const link of extract(original, /(?:https?:\/\/|www\.|linkedin\.com\/|github\.com\/)[^\s|,;]+/gi)) {
+    if (!normalized(revised).includes(link)) warnings.push("A supplied website or profile link was changed.");
+  }
+  const sourceYears = new Set(extract(original, /\b(?:19|20)\d{2}\b/g));
+  for (const year of extract(revised, /\b(?:19|20)\d{2}\b/g)) {
+    if (!sourceYears.has(year)) warnings.push("An unsupported year or date was introduced.");
+  }
+  const sourceMetrics = new Set(extract(original, /\b\d+(?:\.\d+)?%|\$\s?\d+(?:[,.]\d+)*/g));
+  for (const metric of extract(revised, /\b\d+(?:\.\d+)?%|\$\s?\d+(?:[,.]\d+)*/g)) {
+    if (!sourceMetrics.has(metric)) warnings.push("An unsupported numerical result was introduced.");
+  }
+  // Fictional/sample labels are facts too: "Northstar Retail (Example)" must not become "Northstar Retail".
+  const originalLines = original.split("\n").map(x=>x.trim()).filter(Boolean);
+  const revisedLines = revised.split("\n").map(x=>x.trim()).filter(Boolean);
+  for (const line of originalLines) {
+    const label = line.match(/\((?:example|sample|fictional|placeholder)\)/i);
+    if (!label) continue;
+    const prefix = normalized(line.slice(0,label.index).trim().replace(/[|,:–-]\s*$/,""));
+    if (!prefix) continue;
+    const outputLine = revisedLines.find(x=>normalized(x).includes(prefix));
+    if (outputLine && !outputLine.toLowerCase().includes(label[0].toLowerCase())) {
+      warnings.push("A sample or placeholder qualifier was removed.");
+    }
+  }
+  return [...new Set(warnings)];
+}
+
 function buildPrompt(mode, resumeText, jobDescription) {
   const sharedRules = [
     "You are ResumePilot, a careful resume-writing assistant.",
@@ -287,6 +328,10 @@ function buildPrompt(mode, resumeText, jobDescription) {
     "Never invent employers, job titles, dates, degrees, grades, certifications, skills, tools, metrics, achievements, responsibilities or links.",
     "Do not turn a job-description keyword into a claim that the candidate has that skill.",
     "Preserve factual details and contact information supplied by the candidate.",
+    "Preserve names, company and school names, dates, links, numbers, and qualifiers such as (Example), (Sample), fictional or placeholder exactly; never remove these to make a resume seem more credible.",
+    "Do not invent quantified impact (percentages, revenue, time saved, team sizes). If numbers are missing, request specific real metrics in the analysis instead.",
+    "Prioritize concrete, supported improvements to bullet clarity and role relevance; avoid cosmetic synonym swaps if they do not improve precision.",
+    "When a resume is already well structured, say which weaknesses remain and what evidence the candidate must provide; do not claim an ATS score increase.",
     "Remove irrelevant, redundant, placeholder, filler or clearly non-professional content when appropriate.",
     "Use standard ATS section headings, a single-column structure, simple hyphen bullets and plain text.",
     "Do not use tables, columns, icons, graphics or decorative symbols.",
@@ -326,6 +371,7 @@ function buildPrompt(mode, resumeText, jobDescription) {
         "Analyze the match and tailor the resume only where the candidate's source material supports the change.",
         jsonContract,
         "If a job-description skill is not supported by the resume, mention it as a gap in analysis instead of adding it to the resume.",
+        "Highlight which genuine skills align with the job, and specify missing evidence or requirements for the candidate to verify.",
         "",
         "RESUME:",
         resumeText,
@@ -341,6 +387,7 @@ function buildPrompt(mode, resumeText, jobDescription) {
     user: [
       "Review and improve the resume for ATS readability and recruiter clarity.",
       "Strengthen weak wording and bullet structure without inventing metrics or achievements.",
+      "When impact or outcomes are vague, recommend exact questions the candidate should answer (volume, improvement, responsibility) in MISSING INFORMATION rather than adding imagined claims.",
       "Remove unnecessary commentary, filler, repeated information, placeholders and irrelevant content from the final resume.",
       jsonContract,
       "",
@@ -496,6 +543,14 @@ async function handler(event, env) {
         apiKeyPresent: true,
         aiStatus: upstream.status
       }
+    });
+  }
+
+  const factualWarnings = resumeFactWarnings(resumeText, normalized.resume);
+  if (factualWarnings.length) {
+    return response(422, {
+      error: "AI changed or introduced details that could not be verified. The original resume was kept unchanged. Please retry or revise manually.",
+      warnings: factualWarnings
     });
   }
 
