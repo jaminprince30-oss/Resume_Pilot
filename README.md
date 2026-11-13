@@ -10,7 +10,7 @@
 
 - **Resume Builder** — Enter your experience, education, projects, and skills with a live preview as you type. One-click **AI Polish** tightens wording and formatting.
 - **ATS Checker** — Paste or upload a resume, add the job details, and get an ATS-focused analysis with actionable gaps and a score.
-- **AI Review · Improve · ATS Format** — A single end-to-end action that reviews your resume, improves the content, and reformats it to be ATS-friendly.
+- **AI Review · Improve · ATS Format** — Reviews your resume, improves supported wording, formats it for readability, and shows a before/after checklist comparison with evidence-based next steps.
 - **Load example** — Try the full flow instantly with sample data.
 - **Download & copy** — Export the final resume in the supported formats or copy the plain text.
 
@@ -80,4 +80,7 @@ The AI features are configured with environment variables on the Cloudflare Page
 - The app does not save resume text to any database.
 - Model availability, speed, quality, and rate limits depend on the provider and can change.
 - The ATS score is a heuristic checklist, not a prediction from a specific employer's ATS.
-- AI must not invent experience or credentials — review all generated content before using it.
+- AI must not invent experience, metrics, or credentials. Both API implementations reject clearly detectable factual drift such as removed sample labels, changed emails/links, and unsupported dates or numeric results; this is a limited safeguard and cannot prove every statement is true.
+- AI rewriting does **not** guarantee a higher ATS checklist score. If the source lacks measurable achievements or job-specific evidence, add only real information. The app suggests what details to provide instead of inventing them.
+- After AI Review, the main scorecard shows the revised heuristic score; the before/after comparison explains the score change. Without a job description, keyword relevance is excluded.
+- Run regression tests with `npm test`. Production AI calls and browser/download integration should be checked after deployment.
