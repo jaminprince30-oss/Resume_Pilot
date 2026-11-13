@@ -7,8 +7,8 @@ const html = fs.readFileSync("public/index.html", "utf8");
 const start = html.indexOf("const ATS_STOP_WORDS=");
 const end = html.indexOf("function setMetric(", start);
 assert.ok(start >= 0 && end > start, "ATS scoring implementation must exist");
-const { analyze, headingMatches } = vm.runInNewContext(
-  html.slice(start, end) + "\n({analyze,headingMatches})",
+const { analyze, headingMatches, compareAtsResults } = vm.runInNewContext(
+  html.slice(start, end) + "\n({analyze,headingMatches,compareAtsResults})",
   {},
   { timeout: 1000 }
 );
@@ -49,4 +49,26 @@ test("score is always between 0 and 100", () => {
       assert.ok(result.score >= 0 && result.score <= 100);
     }
   }
+});
+
+test("AI comparison uses the same job description for both versions", () => {
+  const before = base.replace("Python SQL", "Python");
+  const after = base;
+  const comparison = compareAtsResults(before, after, "Python SQL Docker");
+  assert.equal(comparison.before.score, analyze(before, "Python SQL Docker").score);
+  assert.equal(comparison.after.score, analyze(after, "Python SQL Docker").score);
+  assert.equal(comparison.delta, comparison.after.score - comparison.before.score);
+  assert.ok(comparison.metrics.some(m => m.label === "Keyword relevance"));
+});
+test("no-job AI polish comparison excludes the keyword metric", () => {
+  const comparison = compareAtsResults(base, base + "\n- Improved 15% throughput", "");
+  assert.equal(comparison.metrics.some(m => m.label === "Keyword relevance"), false);
+  assert.equal(comparison.before.availablePoints, 80);
+  assert.equal(comparison.after.availablePoints, 80);
+});
+test("AI output can score lower or remain unchanged", () => {
+  const equal = compareAtsResults(base, base, "");
+  assert.equal(equal.delta, 0);
+  const worse = compareAtsResults(base, "Name only", "");
+  assert.ok(worse.delta < 0);
 });
