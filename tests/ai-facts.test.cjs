@@ -9,7 +9,7 @@ function loadGuard(file) {
   const end=code.indexOf("function buildPrompt(",start);
   assert.ok(start>=0 && end>start, file+" must include the factual guard");
   return vm.runInNewContext(
-    'const cleanText = value => String(value || "").replace(/\r\n/g, "\n").trim();\n'+
+    'const cleanText = value => String(value || "").trim();'+
     code.slice(start,end)+'\nresumeFactWarnings',
     {},
     {timeout:1000}
