@@ -72,3 +72,10 @@ test("AI output can score lower or remain unchanged", () => {
   const worse = compareAtsResults(base, "Name only", "");
   assert.ok(worse.delta < 0);
 });
+
+test("AI review presents updated score in main scorecard", () => {
+  assert.match(html, /id="score-after-ai-summary"/);
+  assert.match(html, /function showReviewScoreSummary\(comparison\)/);
+  assert.match(html, /showChecklistScore\(comparison\.after,true\)/);
+  assert.match(html, /showReviewScoreSummary\(comparison\)/);
+});
