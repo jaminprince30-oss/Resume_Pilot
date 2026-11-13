@@ -1,86 +1,125 @@
 # ResumePilot
 
-**AI-powered ATS resume builder, checker, and optimizer.**
+**Build, review, and refine a resume with AI assistance and transparent ATS-style feedback.**
 
-> Build a resume that gets read. Fill in your details once, polish them with AI, check them against ATS basics, and download a clean, ATS-friendly resume.
+ResumePilot is a browser-based resume builder and checker. Create a clean resume, compare its content against a target job description, review suggestions, and export a polished version without creating an account.
 
-**Live website:** https://resume-pilot-53m.pages.dev/
+**[Try ResumePilot](https://resume-pilot-53m.pages.dev/)**
 
-## Features
+> **About the score:** ResumePilot calculates a **heuristic ATS-readiness checklist**, not a score from an employer's applicant tracking system or a prediction of interview success. A clearer resume does not always produce a higher number.
 
-- **Resume Builder** — Enter your experience, education, projects, and skills with a live preview as you type. One-click **AI Polish** tightens wording and formatting.
-- **ATS Checker** — Paste or upload a resume, add the job details, and get an ATS-focused analysis with actionable gaps and a score.
-- **AI Review · Improve · ATS Format** — Reviews your resume, improves supported wording, formats it for readability, and shows a before/after checklist comparison with evidence-based next steps.
-- **Load example** — Try the full flow instantly with sample data.
-- **Download & copy** — Export the final resume in the supported formats or copy the plain text.
+## What you can do
 
-## How it works
+| Feature | Description |
+| --- | --- |
+| **Resume Builder** | Enter contact details, a summary, skills, experience, education, projects, and certifications with a live preview. |
+| **AI Polish** | Refine supported wording and presentation, then compare the original and revised checklist scores. |
+| **ATS Checker** | Paste text or extract content from a PDF, DOCX, or TXT resume and review specific structural and content signals. |
+| **Job-description comparison** | Compare terms in a target job description with those in the resume. Include only skills you actually have. |
+| **AI Review · Improve · ATS Format** | Get a written review, a revised resume, and a before/after checklist comparison with suggestions for missing evidence. |
+| **Export** | Copy text or download supported resume versions as PDF, DOCX, or TXT. |
+| **Example resume** | Explore the interface with built-in sample data; replace it with your own information before applying to a job. |
 
-```text
-Browser (public/index.html)
-        |
-        |  POST /api/ai  (resume text + job details, only when you confirm)
-        v
-Cloudflare Pages Function (functions/api/ai.js)
-        |
-        |  validated, length-limited request -> AI provider
-        v
-Normalized AI response -> back to the browser
-```
+## How the ATS checklist works
 
-- `public/index.html` — the whole client: builder, ATS checker, live preview, and downloads.
-- `functions/api/ai.js` — the serverless endpoint (`POST /api/ai`). It keeps API credentials server-side, validates and caps input size, and normalizes model output before returning it.
-- `wrangler.toml`, `package.json` — Pages configuration and scripts.
+The score is calculated **in the browser** from extracted resume text. The checks look for:
+
+- **Contact details** — recognizable email address and phone number.
+- **Sections and structure** — common headings such as Experience, Education, Skills, and Projects.
+- **Keyword relevance** — overlap with terms from a job description, when provided.
+- **Impact and readability** — action-oriented language, bullets, length, and recognizable outcome indicators.
+- **Formatting signals** — simple text-based indicators that might affect readability.
+
+With a job description, these categories contribute to a score out of 100. Without one, keyword relevance is marked **N/A** and the remaining checklist is normalized to 100.
+
+A score can stay the same—or decrease—after AI editing. ResumePilot reports the result rather than artificially boosting it. The checker cannot fully determine how a particular employer's ATS will interpret the original file's layout, tables, or graphics.
+
+## AI assistance and factual accuracy
+
+The AI features are optional and use a **server-side AI integration**. They aim to improve clarity and organization while keeping the candidate's information accurate.
+
+- Existing employers, qualifications, dates, links, and measurable results should be preserved.
+- The backend checks for several types of factual changes, including removed sample labels, changed email addresses or links, and unsupported years or numerical results.
+- If a detectable factual inconsistency is found, the AI response is rejected instead of being offered as the finished resume.
+- Missing outcomes and job-specific evidence should be treated as **questions for the candidate**, not details to invent.
+
+These checks are limited: **always review every AI-generated statement before using a resume.**
+
+## Getting started
+
+1. Open **[ResumePilot](https://resume-pilot-53m.pages.dev/)**.
+2. Choose **Resume Builder** to create a resume, or **ATS Checker** to paste or upload one.
+3. In the ATS Checker, optionally paste a **target job description** for keyword comparison.
+4. Select **Analyze resume** to see the initial checklist score and recommendations.
+5. Select **AI Review · Improve · ATS Format** for a revised draft and before/after results, or use **AI Polish** in the builder.
+6. Review every change and export the version you want to use.
+
+The PDF and DOCX readers load parsing libraries over the network. If extraction fails, paste the resume's text instead. Older `.doc` files are not supported by the checker.
 
 ## Project structure
 
 ```text
 Resume_Pilot/
 ├── public/
-│   └── index.html
+│   └── index.html            # UI, builder, local ATS checks, and exports
 ├── functions/
 │   └── api/
-│       └── ai.js
+│       └── ai.js             # Cloudflare Pages AI endpoint
+├── netlify/
+│   └── functions/
+│       └── ai.js             # Alternative serverless implementation
+├── tests/                   # ATS and AI-integrity regression tests
+├── worker.js                # Additional worker implementation
+├── .env.example             # Example server-side configuration
+├── netlify.toml
 ├── wrangler.toml
 ├── package.json
-├── .env.example
-├── .gitignore
 └── README.md
 ```
 
-## Deploy with Cloudflare Pages
+The client is built with HTML, CSS, and JavaScript. The ATS checklist runs locally; AI-assisted actions send a request to the serverless endpoint at `POST /api/ai`.
 
-1. Connect this GitHub repository to Cloudflare Pages.
-2. Use `main` as the production branch.
-3. Set the build output directory to `public`. No build command is required.
-4. Cloudflare Pages automatically detects the `functions/` directory and deploys the AI endpoint.
+## Local development
 
-## Configuration
+No frontend build step is required. To preview the UI locally, serve the `public` directory using a static file server:
 
-The AI features are configured with environment variables on the Cloudflare Pages project — no keys in the client code:
+```bash
+python3 -m http.server 8000 --directory public
+```
 
-1. Open your Cloudflare Pages project.
-2. Go to **Settings → Variables and Secrets**.
-3. Add your AI provider's **API key** as a **Secret**, and a **model identifier** variable, using the variable names that `functions/api/ai.js` reads (see the top of that file for the exact names).
-4. Save and redeploy.
+Open **http://localhost:8000**. Resume building and local checklist analysis work without an AI endpoint; AI actions require a configured serverless backend and will not work with the static server alone.
 
-> **Never** put a real API key in `public/index.html`, `wrangler.toml`, or the repository — the key is only accessed server-side by the Pages Function.
+To run the available automated regression tests:
 
-## Test the deployed site
+```bash
+npm test
+```
 
-1. Open the live [ResumePilot website](https://resume-pilot-53m.pages.dev/).
-2. Use **Resume Builder** to enter your details — or load the example — and try **AI Polish**.
-3. Use **ATS Checker** to upload or paste a resume and run the ATS analysis.
-4. Use **AI Review · Improve · ATS Format** for the full end-to-end pass.
-5. Download or copy the final resume.
+The tests use Node.js's built-in test runner.
+
+## Deploying
+
+### Cloudflare Pages
+
+1. Connect this repository to your Cloudflare Pages project.
+2. Set the production branch to `main` and the output directory to `public`.
+3. Leave the build command empty; the site is static.
+4. Configure the **server-side API key** as a secret and the **model identifier** as a project environment variable. Refer to `.env.example` for the variable names expected by the backend.
+5. Redeploy and verify that both local ATS checks and AI actions work.
+
+The `functions/api/ai.js` file provides the `/api/ai` endpoint. Keep credentials in the hosting environment—**never in client-side JavaScript or GitHub commits**.
+
+An alternative Netlify function is included in the repository. If using that platform, verify the function routing to `/api/ai` and configure the corresponding server-side environment variables before deploying.
 
 ## Privacy and limitations
 
-- Resume data stays in your browser until you explicitly start an AI action; only then are the resume text and job details sent to the configured AI provider for processing.
-- The app does not save resume text to any database.
-- Model availability, speed, quality, and rate limits depend on the provider and can change.
-- The ATS score is a heuristic checklist, not a prediction from a specific employer's ATS.
-- AI must not invent experience, metrics, or credentials. Both API implementations reject clearly detectable factual drift such as removed sample labels, changed emails/links, and unsupported dates or numeric results; this is a limited safeguard and cannot prove every statement is true.
-- AI rewriting does **not** guarantee a higher ATS checklist score. If the source lacks measurable achievements or job-specific evidence, add only real information. The app suggests what details to provide instead of inventing them.
-- After AI Review, the main scorecard shows the revised heuristic score; the before/after comparison explains the score change. Without a job description, keyword relevance is excluded.
-- Run regression tests with `npm test`. Production AI calls and browser/download integration should be checked after deployment.
+- Uploaded PDF/DOCX/TXT files are read in the browser for checklist analysis; extracted text is not automatically submitted for AI processing.
+- **AI actions require confirmation** before sending resume content and an optional job description to the configured AI service.
+- The project does not include a database for storing resumes.
+- Results depend on text extraction, input completeness, and the available AI service.
+- The checklist is informational—not a certification of ATS compatibility or a hiring guarantee.
+- AI can improve clarity, but cannot truthfully supply missing experience, skills, or achievements.
+
+## Contributing
+
+Suggestions and improvements are welcome through GitHub issues and pull requests. For scoring or AI-related changes, include a reproducible example and update the regression tests when relevant.
