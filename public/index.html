@@ -335,7 +335,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
               <div class="metric"><div class="metric-head"><span>Impact & readability</span><span id="impact-value">—</span></div><div class="bar"><span id="impact-bar"></span></div></div>
               <div class="metric"><div class="metric-head"><span>Formatting signals</span><span id="format-value">—</span></div><div class="bar"><span id="format-bar"></span></div></div>
               <div class="result-list" id="result-list"></div>
-              <div class="tip-box"><strong>What this score means</strong><br>This is a practical checklist estimate—not a score from an employer’s ATS. Different systems parse documents differently.</div>
+              <div class="tip-box"><strong>What this score means</strong><br>This is a text-based checklist estimate, not an employer ATS result or a hiring prediction. Without a job description, keyword points are excluded and the remaining checks are normalized to 100. This checker cannot fully validate document layout.</div>
               <button class="btn primary" id="ai-check-btn" style="width:100%;margin-top:15px">✦ AI Review • Improve • ATS Format →</button>
             </div>
           </section>
@@ -585,25 +585,29 @@ const dz=$("dropzone");
 dz.addEventListener("dragover",e=>{e.preventDefault();dz.classList.add("drag")});
 dz.addEventListener("dragleave",()=>dz.classList.remove("drag"));
 dz.addEventListener("drop",e=>{e.preventDefault();dz.classList.remove("drag");const f=e.dataTransfer.files[0];if(f)handleFile(f)});
-function tokenize(s){const stop=new Set("the and for with that this from your you are our will have has was were can all not but use using used role job work team skills experience ability strong good preferred required including such their them they about into over more less".split(" "));return (s.toLowerCase().match(/[a-z][a-z0-9+#.-]{2,}/g)||[]).filter(w=>!stop.has(w))}
+const ATS_STOP_WORDS=new Set("the and for with that this from your you are our will have has was were can all not but use using used role job work team skills experience ability strong good preferred required including such their them they about into over more less or who where when what how at by in on of to as is be an a we its it per must should years year degree candidate applicants qualifications responsibilities position opportunities knowledge excellent proven".split(" "));
+function tokenize(s){return (String(s||"").toLowerCase().match(/[a-z][a-z0-9+#.-]{1,}/g)||[]).map(w=>w.replace(/^[.-]+|[.-]+$/g,"")).filter(w=>w.length>=2&&!ATS_STOP_WORDS.has(w))}
+function headingMatches(text,pattern){return String(text||"").split(/\r?\n/).some(line=>pattern.test(line.trim().replace(/[:：]\s*$/,"")))}
 function analyze(text,jd){
-  const t=text.toLowerCase(),wordCount=(text.match(/\b[\w+#.-]+\b/g)||[]).length;
+  const resumeTokens=new Set(tokenize(text)),wordCount=(text.match(/\b[\w+#.-]+\b/g)||[]).length;
   const hasEmail=/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text),hasPhone=/(?:\+?\d[\d\s().-]{7,}\d)/.test(text);
   const sectionDefs=[
-    ["Professional summary",/\b(professional summary|summary|profile|career objective|objective)\b/i,5],
-    ["Work experience",/\b(work experience|professional experience|employment history|work history|internship|experience)\b/i,8],
-    ["Education",/\b(education|academic background|qualifications)\b/i,6],
-    ["Skills",/\b(technical skills|core skills|skills|competencies)\b/i,6],
-    ["Projects",/\b(projects|academic projects|selected projects)\b/i,2],
-    ["Certifications",/\b(certifications|certificates|licenses)\b/i,2]
+    ["Professional summary",/^(professional summary|summary|profile|career objective|objective)$/i,5],
+    ["Work experience",/^(work experience|professional experience|employment history|work history|internships?|experience)$/i,8],
+    ["Education",/^(education|academic background|qualifications)$/i,6],
+    ["Skills",/^(technical skills|core skills|skills|competencies)$/i,6],
+    ["Projects",/^(projects|academic projects|selected projects)$/i,2],
+    ["Certifications",/^(certifications|certificates|licenses)$/i,2]
   ];
-  const found=sectionDefs.filter(x=>x[1].test(text));
+  const found=sectionDefs.filter(x=>headingMatches(text,x[1]));
   const sectionScore=Math.min(25,found.reduce((a,x)=>a+x[2],0));
-  const jdTokens=[...new Set(tokenize(jd))];const present=jdTokens.filter(w=>t.includes(w));
-  const keywordScore=jdTokens.length?Math.round(20*Math.min(1,present.length/Math.max(5,Math.min(12,jdTokens.length)))):10;
+  const jdTokens=[...new Set(tokenize(jd))];const present=jdTokens.filter(w=>resumeTokens.has(w));
+  const keywordScore=jdTokens.length?Math.round(20*present.length/jdTokens.length):0;
   const actionWords=["built","developed","created","led","managed","improved","analyzed","designed","implemented","delivered","automated","reduced","increased","launched","coordinated","tested","optimized","maintained","supported","integrated"];
   const actionCount=actionWords.filter(w=>new RegExp("\\b"+w+"\\b","i").test(text)).length;
-  const quantified=(text.match(/\b\d+(?:\.\d+)?%?|\$\s?\d+/g)||[]).length;
+  // Dates and phone numbers are not proof of measurable business impact.
+  const body=text.split(/\r?\n/).filter(line=>!/@|https?:\/\/|www\.|linkedin\.|github\./i.test(line)).join("\n");
+  const quantified=(body.match(/\b\d+(?:\.\d+)?%|\$\s?\d+(?:[,.]\d+)*\b|\b\d+(?:[,.]\d+)*\s*(?:users|customers|projects|records|hours|days|weeks|months|people|clients|requests|tasks)\b/gi)||[]).length;
   const bullets=(text.match(/^[\s]*[•●▪◦*-]\s+/gm)||[]).length;
   const impactScore=Math.min(15,Math.min(7,actionCount)*1.2+Math.min(5,quantified)*1.2+Math.min(4,bullets)*.7);
   const special=(text.match(/[★◆▶✓✔☑☛➤]/g)||[]).length;
@@ -612,7 +616,8 @@ function analyze(text,jd){
   const lengthScore=wordCount>=250&&wordCount<=1000?5:wordCount>=150&&wordCount<=1300?3:1;
   const readabilityScore=Math.min(10,lengthScore+Math.min(3,bullets)*.8+Math.min(3,actionCount)*.6);
   const contactScore=(hasEmail?8:0)+(hasPhone?7:0);
-  const score=Math.round(contactScore+sectionScore+keywordScore+impactScore+formatScore+readabilityScore);
+  const availablePoints=jdTokens.length?100:80;
+  const score=Math.max(0,Math.min(100,Math.round(100*(contactScore+sectionScore+keywordScore+impactScore+formatScore+readabilityScore)/availablePoints)));
   const checks=[];
   checks.push({ok:hasEmail&&hasPhone,title:"Contact information",detail:hasEmail&&hasPhone?"Email and phone number detected.":`Missing ${[!hasEmail?"email":"",!hasPhone?"phone number":""].filter(Boolean).join(" and ")}. Add current contact details near the top.`});
   checks.push({ok:found.some(x=>x[0]==="Work experience"),title:"Standard experience heading",detail:found.some(x=>x[0]==="Work experience")?"A recognizable experience section was found.":"Add a clearly labeled “Work Experience” or “Professional Experience” section if applicable."});
@@ -622,7 +627,7 @@ function analyze(text,jd){
   checks.push({ok:actionCount>=2,title:"Action-oriented language",detail:actionCount>=2?"Several action verbs were detected.":"Start bullets with specific verbs such as developed, analyzed, tested, designed or coordinated—only where accurate."});
   checks.push({ok:special===0,title:"Plain-text symbols",detail:special===0?"No unusual decorative symbols detected in the extracted text.":"Decorative symbols were detected. Replace icons or unusual glyphs with standard text or simple hyphens."});
   checks.push({ok:wordCount>=250&&wordCount<=1000,title:"Resume length",detail:wordCount>=250&&wordCount<=1000?`${wordCount} words detected; this is within a common range, depending on career stage.`:`${wordCount} words detected. Review for missing detail or unnecessary length; the right length depends on experience.`});
-  return {score,contactScore,sectionScore,keywordScore,impactScore,formatScore,readabilityScore,checks,wordCount,found,jdTokens,present};
+  return {score,contactScore,sectionScore,keywordScore,impactScore,formatScore,readabilityScore,checks,wordCount,found,jdTokens,present,availablePoints};
 }
 function setMetric(name,value,max){$(name+"-value").textContent=Math.round(value/max*100)+"%";$(name+"-bar").style.width=Math.max(0,Math.min(100,value/max*100))+"%"}
 function runAnalysis(){
@@ -631,9 +636,9 @@ function runAnalysis(){
   const r=analyze(text,$("job-description").value);
   $("score-number").textContent=r.score;$("score-ring").style.setProperty("--score",r.score+"%");
   $("score-label").textContent=r.score>=80?"Strong ATS basics":r.score>=60?"Room to improve":"Needs attention";
-  $("score-caption").textContent=`${r.wordCount} words · heuristic checklist`;
+  $("score-caption").textContent=`${r.wordCount} words · heuristic checklist`+(r.jdTokens.length?" · job terms compared":" · no job description");
   $("check-results").classList.add("show");
-  setMetric("contact",r.contactScore,15);setMetric("sections",r.sectionScore,25);setMetric("keywords",r.keywordScore,20);setMetric("impact",r.impactScore+r.readabilityScore,25);setMetric("format",r.formatScore,15);
+  setMetric("contact",r.contactScore,15);setMetric("sections",r.sectionScore,25);if(r.jdTokens.length)setMetric("keywords",r.keywordScore,20);else{$("keywords-value").textContent="N/A";$("keywords-bar").style.width="0%"}setMetric("impact",r.impactScore+r.readabilityScore,25);setMetric("format",r.formatScore,15);
   $("result-list").innerHTML=r.checks.map(c=>`<div class="result-row ${c.ok?"good":"warn"}"><div class="status">${c.ok?"✓":"!"}</div><div><strong>${esc(c.title)}</strong><p>${esc(c.detail)}</p></div></div>`).join("");
   if(r.jdTokens.length){
     const missing=r.jdTokens.filter(w=>!r.present.includes(w)).slice(0,8);
@@ -912,7 +917,7 @@ $("builder-ai-copy").addEventListener("click",async()=>{
   catch(e){toast("Clipboard unavailable. Select the text to copy.")}
 });
 $("ai-check-btn").addEventListener("click",async()=>{
-  const text=state.lastResumeText||$("resume-text").value.trim();
+  const text=$("resume-text").value.trim();
   if(!text){toast("Upload a resume or paste its text first.");return}
 
   // One action: run the local ATS checklist, then send the resume to AI
