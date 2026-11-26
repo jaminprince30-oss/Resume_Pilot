@@ -655,8 +655,8 @@ function tokenize(s){
 function resumeKeywordTokens(text){
   const clauses=String(text||"").split(/[\n;]|[.!?](?=\s|$)|\b(?:but|however|although)\b/i);
   return new Set(clauses.flatMap(clause=>{
-    const unsupported=/\b(?:no\s+(?:prior\s+)?(?:experience|knowledge|familiarity|skills?)\s+(?:with|in|of)|(?:not|never)\s+(?:used|worked with|learned|experienced in|familiar with|proficient in)|(?:currently\s+)?learning|(?:want|hope|plan)\s+to\s+learn|interested\s+in\s+learning)\b/i;
-    const match=unsupported.exec(clause);
+    const unsupported=/\b(?:no\s+(?:prior\s+)?(?:experience|knowledge|familiarity|skills?)\s+(?:with|in|of)|(?:not|never)\s+(?:used|worked with|learned|experienced in|familiar with|proficient in)|currently\s+learning|(?:want|hope|plan)\s+to\s+learn|interested\s+in\s+learning)\b/i;
+    const match=unsupported.exec(clause)||/^\s*(?:[-*•]\s*)?learning\s+/i.exec(clause);
     return tokenize(match?clause.slice(0,match.index):clause);
   }));
 }
