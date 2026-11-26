@@ -26,7 +26,7 @@ The score is calculated **in the browser** from extracted resume text. The check
 
 - **Contact details** — recognizable email address and phone number.
 - **Sections and structure** — common headings such as Experience, Education, Skills, and Projects.
-- **Keyword relevance** — overlap with terms from a job description, when provided.
+- **Keyword relevance** — overlap with terms and recognized skill equivalents from a job description, when provided. Common abbreviations, multiword skill phrases and selected word forms are normalized; explicitly negated or aspirational resume clauses are excluded from keyword matching. This is a deterministic heuristic, not full semantic understanding.
 - **Impact and readability** — action-oriented language, bullets, length, and recognizable outcome indicators.
 - **Formatting signals** — simple text-based indicators that might affect readability.
 
