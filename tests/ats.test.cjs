@@ -79,3 +79,27 @@ test("AI review presents updated score in main scorecard", () => {
   assert.match(html, /showChecklistScore\(comparison\.after,true\)/);
   assert.match(html, /showReviewScoreSummary\(comparison\)/);
 });
+
+test("recognized aliases and phrases count once across both texts", () => {
+  const r=analyze("Machine Learning, Amazon Web Services, PostgreSQL, RESTful APIs", "ML machine learning AWS Postgres REST API");
+  assert.equal(r.jdTokens.length,4);
+  assert.equal(r.keywordScore,20);
+});
+test("multiword skills require contiguous matching terms", () => {
+  assert.equal(analyze("Machine maintenance and learning materials", "machine learning").keywordScore,0);
+  assert.equal(analyze("JavaScript", "Java").keywordScore,0);
+  assert.equal(analyze("SQL", "MySQL").keywordScore,0);
+  assert.equal(analyze("C++", "C#").keywordScore,0);
+});
+test("technical punctuation and common inflections are recognized", () => {
+  assert.equal(analyze("NodeJS, C sharp, dotnet, dashboards", "Node.js C# .NET dashboard").keywordScore,20);
+});
+test("explicit gaps and learning intentions do not count as established skills", () => {
+  const r=analyze("Python; no experience with AWS; currently learning Kubernetes; never used Docker", "Python AWS Kubernetes Docker");
+  assert.equal(r.present.length,1);
+  assert.equal(r.keywordScore,5);
+});
+test("ordinary lowercase words do not trigger ambiguous uppercase aliases", () => {
+  assert.equal(analyze("as a developer I work with clients", "AS").keywordScore,0);
+  assert.equal(analyze("hi, I use ai tools", "AI").keywordScore,0);
+});
