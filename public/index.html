@@ -287,7 +287,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
               </div>
               <div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:#8993a6;font-size:10px;font-weight:800"><span style="height:1px;background:#e4e9f2;flex:1"></span>OR PASTE RESUME TEXT<span style="height:1px;background:#e4e9f2;flex:1"></span></div>
               <div class="field"><label for="resume-text">Resume text</label><textarea class="check-textarea" id="resume-text" placeholder="Paste the text from your resume here..."></textarea></div>
-              <div class="field" style="margin-top:15px"><label for="job-description">Target job description (optional, improves keyword analysis)</label><textarea class="check-textarea" id="job-description" style="min-height:130px" placeholder="Paste the job description here to compare important skills and terms."></textarea></div>
+              <div class="field" style="margin-top:15px"><label for="job-description">Target job description (optional, improves keyword analysis)</label><textarea class="check-textarea" id="job-description" style="min-height:130px" placeholder="Paste the job description here to compare important skills, phrases and recognized equivalents."></textarea></div>
               <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:16px"><button class="btn primary" id="analyze-btn">Analyze resume →</button><button class="btn" id="clear-checker">Clear</button></div>
               <div class="disclaimer">Privacy: file text is processed locally in this browser. PDF/DOCX reading loads open-source parsing libraries from a CDN, so an internet connection is needed for those formats. You can always paste plain text instead.</div><div class="disclaimer"><strong>AI privacy:</strong> When you choose an AI feature, the resume text and optional job description are sent to our AI service provider for processing. Do not submit information you are not comfortable sharing. Your API key stays on the server.</div>
             </div>
@@ -597,10 +597,72 @@ dz.addEventListener("dragover",e=>{e.preventDefault();dz.classList.add("drag")})
 dz.addEventListener("dragleave",()=>dz.classList.remove("drag"));
 dz.addEventListener("drop",e=>{e.preventDefault();dz.classList.remove("drag");const f=e.dataTransfer.files[0];if(f)handleFile(f)});
 const ATS_STOP_WORDS=new Set("the and for with that this from your you are our will have has was were can all not but use using used role job work team skills experience ability strong good preferred required including such their them they about into over more less or who where when what how at by in on of to as is be an a we its it per must should years year degree candidate applicants qualifications responsibilities position opportunities knowledge excellent proven".split(" "));
-function tokenize(s){return (String(s||"").toLowerCase().match(/[a-z][a-z0-9+#.-]{1,}/g)||[]).map(w=>w.replace(/^[.-]+|[.-]+$/g,"")).filter(w=>w.length>=2&&!ATS_STOP_WORDS.has(w))}
+// Canonicalize only explicit equivalents; do not infer related but distinct skills.
+const ATS_ALIASES=[
+  ["machine learning","ML"],["artificial intelligence","AI"],
+  ["natural language processing","NLP"],["large language model","large language models","LLM","LLMs"],
+  ["structured query language","SQL"],["amazon web services","AWS"],
+  ["google cloud platform","GCP"],["microsoft azure","Azure"],
+  ["javascript","JavaScript","JS"],["typescript","TypeScript","TS"],
+  ["node.js","NodeJS","Node JS"],["react","React.js","ReactJS"],
+  ["vue.js","VueJS","Vue JS"],["ci/cd","CI CD","continuous integration and continuous delivery","continuous integration and continuous deployment"],
+  ["rest api","REST APIs","RESTful API","RESTful APIs"],
+  ["application programming interface","application programming interfaces","API","APIs"],
+  ["user experience","UX"],["user interface","UI"],
+  ["search engine optimization","SEO"],["customer relationship management","CRM"],
+  ["enterprise resource planning","ERP"],["key performance indicator","key performance indicators","KPI","KPIs"],
+  ["human resources","HR"],["project management professional","PMP"],
+  ["quality assurance","QA"],["software development life cycle","software development lifecycle","SDLC"],
+  ["business intelligence","BI"],["extract transform load","ETL"],
+  ["object oriented programming","object-oriented programming","OOP"],
+  ["test driven development","test-driven development","TDD"],
+  ["data analysis","data analytics"],["data visualization","data visualisation"],
+  ["microsoft excel","MS Excel","Excel"],["power bi","PowerBI"],
+  ["kubernetes","K8s"],["postgresql","Postgres"],
+  ["c#","C sharp"],["c++","C plus plus"],[".net","dotnet"],
+  ["project management"],["communication skills"],["problem solving","problem-solving"],
+  ["data engineering"],["software development"],["cloud computing"],["statistical analysis"]
+];
+const ATS_INFLECTIONS=new Map(Object.entries({
+  analyses:"analysis", projects:"project", reports:"report", dashboards:"dashboard",
+  databases:"database", applications:"application", systems:"system", processes:"process",
+  tests:"test", testing:"test", tested:"test", developed:"develop", developing:"develop",
+  development:"development", managed:"manage", managing:"manage",
+  analyzed:"analyze", analysed:"analyze", analysing:"analyze", analyzing:"analyze",
+  implemented:"implement", implementing:"implement", automated:"automate", automating:"automate"
+}));
+function atsRawTokens(value){
+  return (String(value||"").normalize("NFKC").replace(/[‐‑‒–—]/g,"-")
+    .match(/(?:\.net|[a-z][a-z0-9+#]*(?:\.[a-z0-9+#]+)*)/gi)||[]);
+}
+const ATS_ALIAS_PATTERNS=ATS_ALIASES.flatMap(group=>group.map(alias=>({
+  key:group[0],tokens:atsRawTokens(alias),
+  // Short abbreviations can be ordinary words; require their conventional case.
+  caseSensitive:/^[A-Z]{2,5}s?$/.test(alias)&&!["SQL","AWS","GCP","NLP","LLM","LLMs","API","APIs","ETL","KPI","KPIs","CRM","ERP","SEO","SDLC","OOP","TDD","PMP"].includes(alias)
+}))).sort((a,b)=>b.tokens.length-a.tokens.length);
+function tokenize(s){
+  const tokens=atsRawTokens(s),out=[];
+  for(let i=0;i<tokens.length;){
+    const match=ATS_ALIAS_PATTERNS.find(p=>p.tokens.every((t,j)=>tokens[i+j]!==undefined&&
+      (p.caseSensitive?tokens[i+j]===t:tokens[i+j].toLowerCase()===t.toLowerCase())));
+    if(match){out.push(match.key);i+=match.tokens.length;continue}
+    const word=tokens[i++].toLowerCase();
+    if(word.length>=2&&!ATS_STOP_WORDS.has(word))out.push(ATS_INFLECTIONS.get(word)||word);
+  }
+  return out;
+}
+// Exclude explicitly negated or aspirational clauses, not entire resume sections.
+function resumeKeywordTokens(text){
+  const clauses=String(text||"").split(/[\n;]|[.!?](?=\s|$)|\b(?:but|however|although)\b/i);
+  return new Set(clauses.flatMap(clause=>{
+    const unsupported=/\b(?:no\s+(?:prior\s+)?(?:experience|knowledge|familiarity|skills?)\s+(?:with|in|of)|(?:not|never)\s+(?:used|worked with|learned|experienced in|familiar with|proficient in)|(?:currently\s+)?learning|(?:want|hope|plan)\s+to\s+learn|interested\s+in\s+learning)\b/i;
+    const match=unsupported.exec(clause);
+    return tokenize(match?clause.slice(0,match.index):clause);
+  }));
+}
 function headingMatches(text,pattern){return String(text||"").split(/\r?\n/).some(line=>pattern.test(line.trim().replace(/[:：]\s*$/,"")))}
 function analyze(text,jd){
-  const resumeTokens=new Set(tokenize(text)),wordCount=(text.match(/\b[\w+#.-]+\b/g)||[]).length;
+  const resumeTokens=resumeKeywordTokens(text),wordCount=(text.match(/\b[\w+#.-]+\b/g)||[]).length;
   const hasEmail=/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text),hasPhone=/(?:\+?\d[\d\s().-]{7,}\d)/.test(text);
   const sectionDefs=[
     ["Professional summary",/^(professional summary|summary|profile|career objective|objective)$/i,5],
@@ -682,7 +744,7 @@ function renderAtsComparison(id,beforeText,afterText,jobDescription=""){
     '<span aria-hidden="true">→</span><div><small>After</small><div class="score-amount">'+comparison.after.score+'/100</div></div>'+
     '<span class="score-delta">'+trend+(delta===0?'':" points")+'</span></div>'+
     '<table><thead><tr><th scope="col">Metric</th><th scope="col">Before</th><th scope="col">After</th></tr></thead><tbody>'+rows+'</tbody></table>'+
-    '<p class="disclaimer">'+(comparison.before.jdTokens.length?'Job-description terms were compared in both versions.':'No job description: keyword relevance is excluded from both scores.')+
+    '<p class="disclaimer">'+(comparison.before.jdTokens.length?'Job-description terms and recognized equivalents were compared in both versions.':'No job description: keyword relevance is excluded from both scores.')+
     ' This is a heuristic text checklist, not an employer ATS assessment or a hiring guarantee. AI changes can increase, decrease or leave the score unchanged.</p>'+
     improvementGuidance(comparison);
   return comparison;
