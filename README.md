@@ -20,6 +20,10 @@ ResumePilot is a browser-based resume builder and checker. Create a clean resume
 | **Export** | Copy text or download supported resume versions as PDF, DOCX, or TXT. |
 | **Example resume** | Explore the interface with built-in sample data; replace it with your own information before applying to a job. |
 
+## Job-specific resume templates
+
+Open **Templates** from the top navigation to browse 36 original role-specific templates across 10 industries. Search by job title or skill, filter by industry, and choose a template to open the Resume Builder with a target title and tailored summary, skills, experience and project writing prompts. Suggestions are guidance, not automatically inserted claims. Your existing resume details and optional photo are preserved. Templates share the same single-column layout and support the existing AI and export workflows.
+
 ## How the ATS checklist works
 
 The score is calculated **in the browser** from extracted resume text. The checks look for:
@@ -52,7 +56,7 @@ Resume Builder and ATS Checker each offer an optional profile-photo upload (JPG,
 ## Getting started
 
 1. Open **[ResumePilot](https://resume-pilot-53m.pages.dev/)**.
-2. Choose **Resume Builder** to create a resume, or **ATS Checker** to paste or upload one.
+2. Choose **Templates** to start with role-specific guidance, **Resume Builder** to create a resume, or **ATS Checker** to paste or upload one.
 3. In the ATS Checker, optionally paste a **target job description** for keyword comparison.
 4. Select **Analyze resume** to see the initial checklist score and recommendations.
 5. Select **AI Review · Improve · ATS Format** for a revised draft and before/after results, or use **AI Polish** in the builder.
