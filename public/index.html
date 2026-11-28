@@ -19,17 +19,17 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
 button,input,textarea,select{font:inherit}
 button{cursor:pointer}
-.app{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}
-.sidebar{background:var(--navy);color:#fff;padding:28px 18px;display:flex;flex-direction:column;gap:30px}
+.app{min-height:100vh;display:block}
+.sidebar{background:var(--navy);color:#fff;padding:14px max(20px,calc((100% - 1450px)/2 + 34px));display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:24px}
 .brand{display:flex;align-items:center;gap:11px;padding:0 9px}
 .brand-mark{width:38px;height:38px;display:block;flex-shrink:0;object-fit:contain;filter:drop-shadow(0 7px 9px #3867ed55)}
 .brand-name{font-weight:800;font-size:17px;letter-spacing:-.4px}
 .brand-sub{font-size:11px;color:#aebbd7;margin-top:1px}
 .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#8796b6;padding:0 12px;margin-bottom:8px;font-weight:800}
-.nav{display:grid;gap:7px}
+.nav{display:flex;gap:7px;align-items:center}.nav-label,.side-note{display:none}
 .nav button{border:0;background:transparent;color:#b9c4db;text-align:left;padding:12px;border-radius:10px;display:flex;align-items:center;gap:12px;font-weight:650}
 .nav button:hover{background:#ffffff0d;color:white}
-.nav button.active{background:#ffffff17;color:white;box-shadow:inset 3px 0 #83a0ff}
+.nav button.active{background:#ffffff17;color:white;box-shadow:inset 0 -3px #83a0ff}
 .nav-icon{width:22px;text-align:center;font-size:16px}
 .side-note{margin-top:auto;border:1px solid #ffffff20;background:#ffffff09;border-radius:14px;padding:14px;color:#c3cee3;font-size:12px}
 .side-note strong{display:block;color:white;margin-bottom:5px}
@@ -173,8 +173,17 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
 .download-box strong{font-size:13px}.download-box p{margin:4px 0 0;font-size:11px;color:#6b7690}
 @media(max-width:1100px){.workspace{grid-template-columns:1fr}.preview-wrap{position:static}.checker-grid{grid-template-columns:1fr}.score-panel{display:grid;grid-template-columns:1fr 1fr;gap:16px}.score-panel .score-card{grid-column:1/-1}}
 @media(max-width:760px){
- .app{display:block}.sidebar{padding:12px 14px;gap:12px;position:static}.brand{padding:0 3px}.brand-mark{width:32px;height:32px}.brand-name{font-size:15px}.brand-sub{display:none}.sidebar .nav-label,.side-note{display:none}.nav{display:flex;gap:6px}.nav button{flex:1;justify-content:center;padding:9px 7px;font-size:11px}.nav-icon{width:auto}.topbar{height:55px;padding:0 16px}.top-sub,.local-pill{display:none}.content{padding:22px 14px 42px}.hero{display:block}.hero-actions{margin-top:15px}.hero h1{font-size:23px}.panel-body{padding:15px}.panel-head{padding:15px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.entry-fields{grid-template-columns:1fr}.entry-fields .full{grid-column:auto}.resume-paper{padding:25px 21px;min-height:520px}.preview-wrap{margin-top:0}.score-panel{display:block}.score-card{margin-bottom:12px}.checker-grid{gap:14px}.dropzone{padding:20px 14px}.tabbar{padding:0 14px}
+ .app{display:block}.sidebar{padding:12px 14px;gap:12px;position:static;flex-direction:column;align-items:stretch}.brand{padding:0 3px}.brand-mark{width:32px;height:32px}.brand-name{font-size:15px}.brand-sub{display:none}.sidebar .nav-label,.side-note{display:none}.nav{display:flex;gap:6px}.nav button{flex:1;justify-content:center;padding:9px 5px;font-size:11px;gap:5px;text-align:center;min-width:0}.nav-icon{width:auto}.topbar{height:55px;padding:0 16px;position:static}.top-sub,.local-pill{display:none}.content{padding:22px 14px 42px}.hero{display:block}.hero-actions{margin-top:15px}.hero h1{font-size:23px}.panel-body{padding:15px}.panel-head{padding:15px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.entry-fields{grid-template-columns:1fr}.entry-fields .full{grid-column:auto}.resume-paper{padding:25px 21px;min-height:520px}.preview-wrap{margin-top:0}.score-panel{display:block}.score-card{margin-bottom:12px}.checker-grid{gap:14px}.dropzone{padding:20px 14px}.tabbar{padding:0 14px}
 }
+.template-tools{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:20px}.template-tools .field{flex:1;min-width:150px}.template-tools .field:first-child{flex:2}
+.template-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:18px}
+.template-card{padding:16px;display:flex;flex-direction:column;gap:12px}
+.template-card h3{font-size:16px;line-height:1.25;margin:0}.template-card p{font-size:12px;color:var(--muted);margin:0}
+.template-paper{border:1px solid var(--line);background:#fff;padding:17px;border-radius:9px;min-height:180px;color:var(--ink);box-shadow:0 4px 14px #182a520c;font:10px/1.45 Arial,sans-serif}
+.template-paper strong{display:block;font-size:12px;letter-spacing:.2px;margin-bottom:3px}.template-paper .example-heading{display:block;font-size:9px;font-weight:800;text-transform:uppercase;border-bottom:1px solid #cfd5df;margin:9px 0 4px;padding-bottom:2px}
+.template-card .btn{margin-top:auto}.template-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--blue)}
+.template-guide{border:1px solid #dce5ff;background:#f4f7ff;border-radius:12px;padding:14px;margin-bottom:18px}.template-guide p{margin:5px 0;font-size:12px}.template-guide strong{font-size:13px}.template-guide ul{padding-left:18px;margin:8px 0;font-size:12px}
+.template-guide .btn{margin-top:8px}.template-count{color:var(--muted);font-size:12px;margin:0 0 12px}
 @media print{
  @page{size:A4;margin:12mm}
  body{background:#fff!important}
@@ -195,8 +204,9 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
     <div>
       <div class="nav-label">Workspace</div>
       <nav class="nav" aria-label="Main navigation">
-        <button class="active" data-page="builder" type="button" onclick="document.getElementById('builder-page').classList.remove('hidden');document.getElementById('checker-page').classList.add('hidden');document.querySelectorAll('[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page==='builder')});document.getElementById('top-title').textContent='Resume Builder';window.scrollTo(0,0);"><span class="nav-icon">✎</span> Resume Builder</button>
-        <button data-page="checker" type="button" onclick="document.getElementById('builder-page').classList.add('hidden');document.getElementById('checker-page').classList.remove('hidden');document.querySelectorAll('[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page==='checker')});document.getElementById('top-title').textContent='ATS Checker';window.scrollTo(0,0);"><span class="nav-icon">✓</span> ATS Checker</button>
+        <button class="active" data-page="builder" type="button" aria-current="page"><span class="nav-icon">✎</span> Resume Builder</button>
+        <button data-page="templates" type="button"><span class="nav-icon">▤</span> Templates</button>
+        <button data-page="checker" type="button"><span class="nav-icon">✓</span> ATS Checker</button>
       </nav>
     </div>
     <div class="side-note"><strong>Designed for ATS parsing</strong>Simple sections, readable text, standard headings and a clean single-column layout.</div>
@@ -211,13 +221,14 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
     <section class="content" id="builder-page">
       <div class="hero">
         <div><div class="eyebrow">Resume workspace</div><h1>Build a resume that gets read.</h1><p>Add your details and see a clean, ATS-friendly resume take shape as you type. Keep everything factual—no made-up experience or skills.</p></div>
-        <div class="hero-actions"><button class="btn" id="sample-btn">↻ Load example</button><button class="btn soft" id="ai-builder-btn">✦ AI Polish</button><div class="dl-group"><select class="dl-format" id="builder-export-format" aria-label="Resume download format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn primary" id="builder-export">⇩ Download</button></div></div>
+        <div class="hero-actions"><button class="btn" data-page="templates" type="button">▤ Browse templates</button><button class="btn" id="sample-btn">↻ Load example</button><button class="btn soft" id="ai-builder-btn">✦ AI Polish</button><div class="dl-group"><select class="dl-format" id="builder-export-format" aria-label="Resume download format"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="txt">TXT</option></select><button class="btn primary" id="builder-export">⇩ Download</button></div></div>
       </div>
 
       <div class="workspace">
         <section class="panel">
           <div class="panel-head"><div><h2>Your resume details</h2><p>Fill in the sections that apply to you.</p></div><span class="preview-meta">Live preview</span></div>
           <div class="panel-body">
+            <div id="active-template-guide" class="template-guide hidden" aria-live="polite"></div>
             <div class="section-title"><h3>Contact information</h3><span>Required basics</span></div>
             <div class="form-grid">
               <div class="field"><label for="fullName">Full name</label><input id="fullName" data-field="fullName" placeholder="e.g. Alex Morgan"></div>
@@ -278,6 +289,14 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
           </section>
         </section>
       </div>
+    </section>
+
+    <section class="content hidden" id="templates-page">
+      <div class="hero"><div><div class="eyebrow">Career-specific templates</div><h1>Find a resume for your next role.</h1><p>Browse original job-specific starter templates. Select a role to load tailored writing prompts into the builder, then add only your real details.</p></div></div>
+      <div class="template-tools"><div class="field"><label for="template-search">Search by job title or skill</label><input id="template-search" type="search" placeholder="e.g. Python, nurse, accountant"></div><div class="field"><label for="template-category">Industry</label><select id="template-category"><option value="">All industries</option></select></div><button class="btn" type="button" id="template-reset">Clear filters</button></div>
+      <p class="template-count" id="template-count" aria-live="polite"></p>
+      <div class="template-grid" id="template-grid"></div>
+      <p class="disclaimer">All examples are original writing guides, not claims about your experience. They use the same clean single-column resume layout and support PDF, DOCX, TXT, optional photos and AI polish.</p>
     </section>
 
     <section class="content hidden" id="checker-page">
@@ -374,7 +393,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
 const state = {
   fullName:"",targetTitle:"",email:"",phone:"",location:"",linkedin:"",portfolio:"",
   summary:"",skills:"",certifications:"",achievements:"",
-  experience:[],education:[],projects:[],lastResumeText:"",builderOptimizedText:"",checkerOptimizedText:"",builderPhoto:"",checkerPhoto:""
+  experience:[],education:[],projects:[],lastResumeText:"",builderOptimizedText:"",checkerOptimizedText:"",builderPhoto:"",checkerPhoto:"",templateId:""
 };
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -382,13 +401,383 @@ const lines = value => String(value || "").split(/\n+/).map(s=>s.trim()).filter(
 const cleanBullet = value => String(value || "").split(/\n+/).map(s=>s.trim().replace(/^[•●▪◦*-]\s*/,"")).filter(Boolean);
 function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),5000)}
 function setPage(page){
-  $("builder-page").classList.toggle("hidden",page!=="builder");
-  $("checker-page").classList.toggle("hidden",page!=="checker");
-  document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
-  $("top-title").textContent=page==="builder"?"Resume Builder":"ATS Checker";
+  const titles={builder:"Resume Builder",templates:"Resume Templates",checker:"ATS Checker"};
+  if(!Object.hasOwn(titles,page))return;
+  Object.keys(titles).forEach(key=>$(key+"-page").classList.toggle("hidden",key!==page));
+  document.querySelectorAll(".nav [data-page]").forEach(b=>{
+    const active=b.dataset.page===page;b.classList.toggle("active",active);
+    if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");
+  });
+  $("top-title").textContent=titles[page];
   window.scrollTo({top:0,behavior:"smooth"});
 }
 document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>setPage(b.dataset.page)));
+const RESUME_TEMPLATES=[
+  {
+    "id": "role-1",
+    "title": "Software Engineer",
+    "category": "Technology",
+    "skills": "Programming languages, Git, testing, APIs",
+    "summary": "Describe the systems you built, your role and the technical problem you solved.",
+    "bullet": "Implemented [feature] using [technology]; verified it with [tests or evidence].",
+    "project": "Explain a software project, architecture and deployment."
+  },
+  {
+    "id": "role-2",
+    "title": "Full Stack Developer",
+    "category": "Technology",
+    "skills": "HTML, CSS, JavaScript, backend APIs, databases",
+    "summary": "Describe your frontend and backend contributions and preferred stack.",
+    "bullet": "Built [interface or API] with [stack] to support [user need].",
+    "project": "Describe an application, database design and deployment."
+  },
+  {
+    "id": "role-3",
+    "title": "Python Developer",
+    "category": "Technology",
+    "skills": "Python, debugging, APIs, SQL, unit testing",
+    "summary": "Describe Python applications, automation and libraries you actually used.",
+    "bullet": "Automated [task] with [Python library] and verified [result].",
+    "project": "Show a Python script, API or automation project."
+  },
+  {
+    "id": "role-4",
+    "title": "Java Developer",
+    "category": "Technology",
+    "skills": "Java, OOP, Spring, SQL, testing",
+    "summary": "Describe Java development and relevant coursework or professional work.",
+    "bullet": "Implemented [Java component] to support [business function].",
+    "project": "Explain your Java project and testing approach."
+  },
+  {
+    "id": "role-5",
+    "title": "Android Developer",
+    "category": "Technology",
+    "skills": "Kotlin, Java, Android Studio, UI, REST APIs",
+    "summary": "Describe Android applications, UI work and mobile development skills.",
+    "bullet": "Implemented [Android feature] using [technology] and tested [scenario].",
+    "project": "Describe an app, screens and features you built."
+  },
+  {
+    "id": "role-6",
+    "title": "Data Analyst",
+    "category": "Data & AI",
+    "skills": "SQL, Excel, Python, dashboards, data cleaning",
+    "summary": "Describe analytical skills, data sources and decisions your work supported.",
+    "bullet": "Analyzed [dataset] using [tool] to identify [verified finding].",
+    "project": "Describe a dashboard, dataset or analysis workflow."
+  },
+  {
+    "id": "role-7",
+    "title": "Data Scientist",
+    "category": "Data & AI",
+    "skills": "Python, statistics, machine learning, model evaluation",
+    "summary": "Describe your analytical methods, datasets and evaluation experience.",
+    "bullet": "Trained and evaluated [model] on [dataset] using [metric].",
+    "project": "Explain the research question, approach and validation."
+  },
+  {
+    "id": "role-8",
+    "title": "Machine Learning Engineer",
+    "category": "Data & AI",
+    "skills": "Python, ML frameworks, model training, deployment",
+    "summary": "Describe model development, evaluation and deployment experience.",
+    "bullet": "Implemented [model or pipeline] for [task]; evaluated [verified metric].",
+    "project": "Explain a model, dataset, experiment and deployment."
+  },
+  {
+    "id": "role-9",
+    "title": "AI Engineer",
+    "category": "Data & AI",
+    "skills": "Python, LLMs, evaluation, APIs, retrieval",
+    "summary": "Describe AI systems you contributed to and how you evaluated them.",
+    "bullet": "Developed [AI feature] and evaluated [quality or safety criteria].",
+    "project": "Describe an AI application, evaluation and limitations."
+  },
+  {
+    "id": "role-10",
+    "title": "Cybersecurity Analyst",
+    "category": "Technology",
+    "skills": "Network security, logs, incident response, risk analysis",
+    "summary": "Describe security monitoring, labs and risk-assessment experience.",
+    "bullet": "Investigated [event] using [tool] and documented [finding].",
+    "project": "Describe a security lab, threat model or detection workflow."
+  },
+  {
+    "id": "role-11",
+    "title": "Cloud / DevOps Engineer",
+    "category": "Technology",
+    "skills": "Linux, CI/CD, containers, cloud infrastructure",
+    "summary": "Describe infrastructure, automation and reliability work.",
+    "bullet": "Automated [deployment or process] using [tool] and verified [result].",
+    "project": "Describe a pipeline or infrastructure project."
+  },
+  {
+    "id": "role-12",
+    "title": "QA / Software Tester",
+    "category": "Technology",
+    "skills": "Test cases, bug reports, automation, regression testing",
+    "summary": "Describe testing methods and the software products you tested.",
+    "bullet": "Designed [test cases] for [feature] and documented [defects].",
+    "project": "Describe a testing suite or quality assurance project."
+  },
+  {
+    "id": "role-13",
+    "title": "Student / Fresher",
+    "category": "Students & Internships",
+    "skills": "Coursework, projects, teamwork, relevant technical skills",
+    "summary": "Describe your degree, career interest and strongest relevant coursework or projects.",
+    "bullet": "Completed [coursework or volunteer task] and demonstrated [skill].",
+    "project": "Describe an academic project and your contribution."
+  },
+  {
+    "id": "role-14",
+    "title": "Internship",
+    "category": "Students & Internships",
+    "skills": "Relevant coursework, research, tools, teamwork",
+    "summary": "Describe the internship you seek and practical skills you can demonstrate.",
+    "bullet": "Contributed to [student project or activity] by [specific action].",
+    "project": "Describe a course project, portfolio or independent study."
+  },
+  {
+    "id": "role-15",
+    "title": "Research Assistant",
+    "category": "Students & Internships",
+    "skills": "Literature review, data collection, research methods, documentation",
+    "summary": "Describe your research interests, methodology and academic experience.",
+    "bullet": "Collected or analyzed [research data] using [method].",
+    "project": "Describe a research question, methodology and findings."
+  },
+  {
+    "id": "role-16",
+    "title": "Mechanical Engineer",
+    "category": "Engineering",
+    "skills": "CAD, design, manufacturing, technical analysis",
+    "summary": "Describe engineering design, coursework and hands-on work.",
+    "bullet": "Designed or evaluated [component] using [method or tool].",
+    "project": "Describe a design, prototype or manufacturing project."
+  },
+  {
+    "id": "role-17",
+    "title": "Civil Engineer",
+    "category": "Engineering",
+    "skills": "CAD, site supervision, estimation, safety, materials",
+    "summary": "Describe infrastructure work, site exposure and engineering methods.",
+    "bullet": "Prepared [drawing or estimate] for [project] using [tool].",
+    "project": "Describe a civil design or site project."
+  },
+  {
+    "id": "role-18",
+    "title": "Electrical Engineer",
+    "category": "Engineering",
+    "skills": "Circuit design, testing, electrical systems, safety",
+    "summary": "Describe electrical systems, laboratory experience and design skills.",
+    "bullet": "Tested [circuit or equipment] using [method] to verify [requirement].",
+    "project": "Describe an electrical or electronics project."
+  },
+  {
+    "id": "role-19",
+    "title": "Accountant",
+    "category": "Finance & Business",
+    "skills": "Bookkeeping, reconciliation, Excel, reporting",
+    "summary": "Describe accounting experience and the records you managed.",
+    "bullet": "Reconciled [accounts] and prepared [reports] using [tool].",
+    "project": "Describe a finance or accounting exercise."
+  },
+  {
+    "id": "role-20",
+    "title": "Financial Analyst",
+    "category": "Finance & Business",
+    "skills": "Financial modeling, Excel, reporting, analysis",
+    "summary": "Describe financial analysis, forecasting and reporting experience.",
+    "bullet": "Analyzed [financial data] to support [decision or report].",
+    "project": "Describe a financial model or valuation analysis."
+  },
+  {
+    "id": "role-21",
+    "title": "Business Analyst",
+    "category": "Finance & Business",
+    "skills": "Requirements, process mapping, documentation, data analysis",
+    "summary": "Describe business problems, stakeholder work and analytical skills.",
+    "bullet": "Documented [requirements] and analyzed [process] with [method].",
+    "project": "Describe a process improvement or requirements project."
+  },
+  {
+    "id": "role-22",
+    "title": "Project Manager",
+    "category": "Finance & Business",
+    "skills": "Planning, risk tracking, scheduling, stakeholder communication",
+    "summary": "Describe project scope, responsibilities and delivery experience.",
+    "bullet": "Coordinated [project activities] and tracked [milestones or risks].",
+    "project": "Describe a project plan, constraints and outcome."
+  },
+  {
+    "id": "role-23",
+    "title": "HR / Recruiter",
+    "category": "Finance & Business",
+    "skills": "Recruitment, onboarding, HR documentation, communication",
+    "summary": "Describe recruitment, people operations or administrative experience.",
+    "bullet": "Coordinated [recruitment or HR process] and maintained [records].",
+    "project": "Describe an HR initiative or relevant coursework."
+  },
+  {
+    "id": "role-24",
+    "title": "Digital Marketing Specialist",
+    "category": "Marketing & Design",
+    "skills": "SEO, campaigns, analytics, content, social media",
+    "summary": "Describe campaigns, channels and measurable results you can verify.",
+    "bullet": "Managed [campaign or content] and tracked [metric or outcome].",
+    "project": "Describe a campaign, audience and evaluation."
+  },
+  {
+    "id": "role-25",
+    "title": "Graphic Designer",
+    "category": "Marketing & Design",
+    "skills": "Typography, layout, branding, design tools",
+    "summary": "Describe visual communication, design tools and portfolio focus.",
+    "bullet": "Designed [asset] for [audience] following [brief].",
+    "project": "Describe a design project and include your portfolio link."
+  },
+  {
+    "id": "role-26",
+    "title": "UI / UX Designer",
+    "category": "Marketing & Design",
+    "skills": "User research, wireframes, prototyping, usability testing",
+    "summary": "Describe research, interaction design and your design process.",
+    "bullet": "Created [prototype] and tested it with [method or feedback].",
+    "project": "Describe a case study, problem, process and evidence."
+  },
+  {
+    "id": "role-27",
+    "title": "Teacher",
+    "category": "Education",
+    "skills": "Lesson planning, classroom management, assessment, communication",
+    "summary": "Describe subjects, teaching experience and learner support.",
+    "bullet": "Planned [lesson or activity] and assessed [learning objective].",
+    "project": "Describe a teaching resource or classroom initiative."
+  },
+  {
+    "id": "role-28",
+    "title": "Nurse",
+    "category": "Healthcare",
+    "skills": "Patient care, clinical documentation, safety, teamwork",
+    "summary": "Describe actual clinical experience, scope of practice and qualifications.",
+    "bullet": "Supported [patient care task] within [clinical setting] and documented [care activity].",
+    "project": "Describe relevant training, clinical placements or quality improvement."
+  },
+  {
+    "id": "role-29",
+    "title": "Pharmacist",
+    "category": "Healthcare",
+    "skills": "Dispensing, medication safety, inventory, patient communication",
+    "summary": "Describe actual pharmacy practice, registration and training.",
+    "bullet": "Supported [dispensing or inventory task] following [applicable procedure].",
+    "project": "Describe a pharmacy placement or medication-safety project."
+  },
+  {
+    "id": "role-30",
+    "title": "Medical Lab Technician",
+    "category": "Healthcare",
+    "skills": "Specimen handling, laboratory testing, quality control, documentation",
+    "summary": "Describe laboratory procedures, training and safety practices.",
+    "bullet": "Processed [specimen type] according to [verified procedure].",
+    "project": "Describe a lab placement or testing project."
+  },
+  {
+    "id": "role-31",
+    "title": "Administrative Assistant",
+    "category": "Administration & Service",
+    "skills": "Scheduling, document management, spreadsheets, communication",
+    "summary": "Describe administrative responsibilities and office tools.",
+    "bullet": "Coordinated [office task] and maintained [records] using [tool].",
+    "project": "Describe an organizational or documentation improvement."
+  },
+  {
+    "id": "role-32",
+    "title": "Customer Service Representative",
+    "category": "Administration & Service",
+    "skills": "Customer communication, issue resolution, CRM, documentation",
+    "summary": "Describe customer support channels and problems you helped resolve.",
+    "bullet": "Handled [customer inquiries] and documented [resolution or escalation].",
+    "project": "Describe a customer support or service improvement."
+  },
+  {
+    "id": "role-33",
+    "title": "Sales Associate",
+    "category": "Administration & Service",
+    "skills": "Customer service, product knowledge, sales, inventory",
+    "summary": "Describe retail or sales experience and relevant service skills.",
+    "bullet": "Assisted [customers] with [products or service] and maintained [records].",
+    "project": "Describe a sales, service or inventory initiative."
+  },
+  {
+    "id": "role-34",
+    "title": "Hotel / Front Desk Staff",
+    "category": "Hospitality & Logistics",
+    "skills": "Guest service, reservations, communication, coordination",
+    "summary": "Describe hospitality duties and guest-facing experience.",
+    "bullet": "Coordinated [guest requests or reservations] using [system].",
+    "project": "Describe a guest service or hospitality training activity."
+  },
+  {
+    "id": "role-35",
+    "title": "Warehouse / Logistics Coordinator",
+    "category": "Hospitality & Logistics",
+    "skills": "Inventory, shipping, stock control, safety, documentation",
+    "summary": "Describe logistics tasks, inventory systems and safe work practices.",
+    "bullet": "Tracked [inventory or shipments] and maintained [records].",
+    "project": "Describe a logistics or inventory improvement."
+  },
+  {
+    "id": "role-36",
+    "title": "Electrician / Technician",
+    "category": "Engineering",
+    "skills": "Troubleshooting, maintenance, safety, technical documentation",
+    "summary": "Describe relevant training, equipment and authorized work.",
+    "bullet": "Inspected or maintained [equipment] using [approved method].",
+    "project": "Describe a practical training, repair or maintenance project."
+  }
+];
+function getTemplate(){return RESUME_TEMPLATES.find(t=>t.id===state.templateId)}
+function filterTemplates(query="",category=""){
+  const q=String(query).trim().toLowerCase();
+  return RESUME_TEMPLATES.filter(t=>(!category||t.category===category)&&q.split(/\s+/).filter(Boolean).every(word=>[t.title,t.category,t.skills].join(" ").toLowerCase().includes(word)));
+}
+function renderTemplates(){
+  const results=filterTemplates($("template-search").value,$("template-category").value);
+  $("template-count").textContent=results.length+" of "+RESUME_TEMPLATES.length+" job templates";
+  $("template-grid").innerHTML=results.length?results.map(t=>'<article class="panel template-card"><span class="template-tag">'+esc(t.category)+'</span><h3>'+esc(t.title)+'</h3><div class="template-paper"><strong>YOUR NAME</strong>'+esc(t.title)+'<span class="example-heading">Professional summary</span>'+esc(t.summary)+'<span class="example-heading">Skills to consider</span>'+esc(t.skills)+'<span class="example-heading">Experience / projects</span>'+esc(t.bullet)+'</div><p>Suggested skills and writing prompts. Add only details that are true for you.</p><button class="btn primary" type="button" data-template-id="'+esc(t.id)+'">Use this template</button></article>').join(""):'<div class="panel template-card"><strong>No matching templates</strong><p>Try a different job title or industry.</p></div>';
+}
+function updateTemplateGuide(){
+  const t=getTemplate(),guide=$("active-template-guide");
+  guide.classList.toggle("hidden",!t);
+  $("summary").placeholder=t?t.summary:"Summarize your experience, strengths and the role you are targeting. Use specific, truthful details.";
+  $("skills").placeholder=t?"If accurate: "+t.skills:"Python, SQL, Excel, data visualization, stakeholder communication";
+  document.querySelectorAll('#experience-list textarea[data-key="bullets"]').forEach(el=>el.placeholder=t?t.bullet:"One responsibility or result per line. Add numbers only when accurate.");
+  document.querySelectorAll('#projects-list textarea[data-key="bullets"]').forEach(el=>el.placeholder=t?t.project:"One contribution or result per line.");
+  guide.innerHTML=t?'<strong>'+esc(t.title)+' template</strong><p>Role-specific guidance only. No suggested skills, accomplishments or qualifications have been added to your resume automatically.</p><ul><li><b>Summary:</b> '+esc(t.summary)+'</li><li><b>Skills to consider:</b> '+esc(t.skills)+'</li><li><b>Experience:</b> '+esc(t.bullet)+'</li><li><b>Projects:</b> '+esc(t.project)+'</li></ul><button class="btn small" type="button" id="clear-template">Remove guidance</button>':"";
+  if(t)$("clear-template").addEventListener("click",()=>{state.templateId="";updateTemplateGuide()});
+}
+function applyTemplate(id){
+  const t=RESUME_TEMPLATES.find(item=>item.id===id);
+  if(!t)return;
+  // Change only the desired job title and prompts; preserve every entered fact.
+  if(state.targetTitle&&state.targetTitle!==t.title&&!window.confirm("Change the target job title to "+t.title+"? Your other resume details will stay unchanged."))return;
+  state.templateId=t.id;state.targetTitle=t.title;$("targetTitle").value=t.title;
+  state.builderOptimizedText="";
+  $("builder-ai-panel").classList.add("hidden");
+  updateTemplateGuide();renderPreview();setPage("builder");toast(t.title+" template selected. Add your real details.");
+}
+function initTemplates(){
+  const categories=[...new Set(RESUME_TEMPLATES.map(t=>t.category))].sort();
+  categories.forEach(category=>{const option=document.createElement("option");option.value=category;option.textContent=category;$("template-category").appendChild(option)});
+  $("template-search").addEventListener("input",renderTemplates);
+  $("template-category").addEventListener("change",renderTemplates);
+  $("template-reset").addEventListener("click",()=>{$("template-search").value="";$("template-category").value="";renderTemplates()});
+  $("template-grid").addEventListener("click",event=>{const b=event.target.closest("[data-template-id]");if(b)applyTemplate(b.dataset.templateId)});
+  renderTemplates();
+}
+
 function entryTemplate(type,item,index){
   const title={experience:"Experience",education:"Education",projects:"Project"}[type];
   if(type==="experience") return `<div class="entry-card" data-entry="${type}" data-index="${index}">
@@ -421,6 +810,7 @@ function entryTemplate(type,item,index){
 function renderEntries(type){
   const host=$(`${type}-list`);
   host.innerHTML=state[type].map((item,i)=>entryTemplate(type,item,i)).join("");
+  updateTemplateGuide();
   host.querySelectorAll("[data-entry]").forEach(card=>{
     card.querySelectorAll("[data-key]").forEach(input=>input.addEventListener("input",()=>{
       state[type][Number(card.dataset.index)][input.dataset.key]=input.value;
@@ -491,7 +881,7 @@ function downloadBuilderResume(formatId,button){
 }
 $("builder-export").addEventListener("click",e=>downloadBuilderResume("builder-export-format",e.currentTarget));
 $("sample-btn").addEventListener("click",()=>{
-  clearResumePhoto("builder");state.builderOptimizedText="";
+  clearResumePhoto("builder");state.builderOptimizedText="";state.templateId="";updateTemplateGuide();
   Object.assign(state,{fullName:"Jordan Lee",targetTitle:"Junior Data Analyst",email:"jordan.lee@email.com",phone:"+1 555 010 2468",location:"Austin, TX",linkedin:"linkedin.com/in/jordanlee",portfolio:"github.com/jordanlee",summary:"Entry-level data analyst with project experience using Python, SQL and Excel to clean datasets, explore trends and communicate findings. Interested in turning business questions into clear, actionable analysis.",skills:"Python, SQL, Excel, Power BI, data cleaning, data visualization, statistical analysis, communication",certifications:"Google Data Analytics Professional Certificate — Google — 2025",achievements:"Volunteer data coordinator, Campus Sustainability Club"});
   state.experience=[{role:"Data Intern",company:"Northstar Retail (Example)",location:"Austin, TX",dates:"Jun 2025 – Aug 2025",bullets:"Cleaned and validated weekly sales data using Excel and SQL.\nBuilt recurring reports for the operations team and documented data definitions."}];
   state.education=[{degree:"B.S. in Information Systems",school:"Example State University",location:"Austin, TX",dates:"2022 – 2026",details:"Relevant coursework: Statistics, Database Systems, Business Analytics"}];
@@ -1172,7 +1562,7 @@ $("final-download-btn").addEventListener("click",async e=>{
 
 
 /* initial blank entries and preview */
-addEntry("experience");addEntry("education");addEntry("projects");renderPreview();
+addEntry("experience");addEntry("education");addEntry("projects");renderPreview();initTemplates();
 </script>
 </body>
 </html>
