@@ -45,6 +45,10 @@ The AI features are optional and use a **server-side AI integration**. They aim 
 
 These checks are limited: **always review every AI-generated statement before using a resume.**
 
+## Optional resume photo
+
+Resume Builder and ATS Checker each offer an optional profile-photo upload (JPG, PNG or WebP, up to 5 MB). The photo is previewed locally and included in PDF or DOCX downloads when selected. TXT files and AI requests contain text only; the photo is not used in ATS scoring. Remove it at any time, or leave the option empty for a photo-free resume. Use a photo only if requested or appropriate for the role and local hiring conventions.
+
 ## Getting started
 
 1. Open **[ResumePilot](https://resume-pilot-53m.pages.dev/)**.
