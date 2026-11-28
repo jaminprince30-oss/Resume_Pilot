@@ -22,7 +22,7 @@ button{cursor:pointer}
 .app{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}
 .sidebar{background:var(--navy);color:#fff;padding:28px 18px;display:flex;flex-direction:column;gap:30px}
 .brand{display:flex;align-items:center;gap:11px;padding:0 9px}
-.brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#6e8cff,#3867ed);display:grid;place-items:center;font-weight:900;font-size:18px;box-shadow:0 7px 18px #3867ed55}
+.brand-mark{width:38px;height:38px;display:block;flex-shrink:0;object-fit:contain;filter:drop-shadow(0 7px 9px #3867ed55)}
 .brand-name{font-weight:800;font-size:17px;letter-spacing:-.4px}
 .brand-sub{font-size:11px;color:#aebbd7;margin-top:1px}
 .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#8796b6;padding:0 12px;margin-bottom:8px;font-weight:800}
@@ -183,7 +183,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark">R</div>
+      <img class="brand-mark" src="/favicon.svg" width="38" height="38" alt="" aria-hidden="true">
       <div><div class="brand-name">ResumePilot</div><div class="brand-sub">Build. Check. Improve.</div></div>
     </div>
     <div>
