@@ -83,6 +83,12 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
 .preview-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .preview-meta{font-size:11px;color:var(--muted)}
 .resume-paper{background:#fff;min-height:690px;padding:34px 36px;color:#172033;font-family:Arial,Helvetica,sans-serif;box-shadow:0 8px 25px #182a5210}
+.photo-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 8px}
+.photo-picker img{width:54px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.photo-picker-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.resume-header{display:flex;gap:14px;align-items:flex-start}
+.resume-header-text{flex:1;min-width:0}
+.resume-header-photo{width:72px;height:96px;object-fit:cover;flex:none}
 .resume-paper h1{font-family:Arial,Helvetica,sans-serif;font-size:24px;letter-spacing:0;margin:0 0 4px;text-transform:uppercase}
 .resume-role{font-size:12px;font-weight:700;color:#35435c;margin-bottom:6px}
 .resume-contact{font-size:10px;color:#4c5669;line-height:1.7;border-bottom:1px solid #cfd5df;padding-bottom:12px;margin-bottom:15px;overflow-wrap:anywhere}
@@ -224,6 +230,9 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
             </div>
 
             <hr class="sep">
+            <div class="section-title"><h3>Profile photo</h3><span>Optional</span></div>
+            <div class="photo-picker"><img id="builder-photo-thumb" class="hidden" alt="Selected resume photo"><div><div class="photo-picker-actions"><label class="btn small" for="builder-photo-file">Choose photo</label><input class="hidden" id="builder-photo-file" type="file" accept="image/jpeg,image/png,image/webp"><button type="button" class="btn small danger hidden" id="builder-photo-remove">Remove photo</button></div><div class="hint" id="builder-photo-status" role="status">No photo selected</div></div></div><p class="disclaimer">Optional: use a photo only if the employer requests one or it is customary. JPG, PNG or WebP, up to 5 MB. Included in PDF and DOCX only; stays in this browser and is not sent to AI or scored by the ATS checklist.</p>
+            <hr class="sep">
             <div class="section-title"><h3>Professional summary</h3><span>2–4 concise lines</span></div>
             <div class="field"><textarea id="summary" data-field="summary" placeholder="Summarize your experience, strengths and the role you are targeting. Use specific, truthful details."></textarea><span class="hint">Avoid generic claims. Mention relevant tools, domain knowledge and years/level of experience if accurate.</span></div>
 
@@ -288,6 +297,8 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
               </div>
               <div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:#8993a6;font-size:10px;font-weight:800"><span style="height:1px;background:#e4e9f2;flex:1"></span>OR PASTE RESUME TEXT<span style="height:1px;background:#e4e9f2;flex:1"></span></div>
               <div class="field"><label for="resume-text">Resume text</label><textarea class="check-textarea" id="resume-text" placeholder="Paste the text from your resume here..."></textarea></div>
+              <div class="section-title" style="margin-top:18px"><h3>Photo for final download</h3><span>Optional</span></div>
+              <div class="photo-picker"><img id="checker-photo-thumb" class="hidden" alt="Selected resume photo"><div><div class="photo-picker-actions"><label class="btn small" for="checker-photo-file">Choose photo</label><input class="hidden" id="checker-photo-file" type="file" accept="image/jpeg,image/png,image/webp"><button type="button" class="btn small danger hidden" id="checker-photo-remove">Remove photo</button></div><div class="hint" id="checker-photo-status" role="status">No photo selected</div></div></div><p class="disclaimer">Optional: use a photo only if the employer requests one or it is customary. JPG, PNG or WebP, up to 5 MB. Included in PDF and DOCX only; stays in this browser and is not sent to AI or scored by the ATS checklist.</p>
               <div class="field" style="margin-top:15px"><label for="job-description">Target job description (optional, improves keyword analysis)</label><textarea class="check-textarea" id="job-description" style="min-height:130px" placeholder="Paste the job description here to compare important skills, phrases and recognized equivalents."></textarea></div>
               <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:16px"><button class="btn primary" id="analyze-btn">Analyze resume →</button><button class="btn" id="clear-checker">Clear</button></div>
               <div class="disclaimer">Privacy: file text is processed locally in this browser. PDF/DOCX reading loads open-source parsing libraries from a CDN, so an internet connection is needed for those formats. You can always paste plain text instead.</div><div class="disclaimer"><strong>AI privacy:</strong> When you choose an AI feature, the resume text and optional job description are sent to our AI service provider for processing. Do not submit information you are not comfortable sharing. Your API key stays on the server.</div>
@@ -363,7 +374,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:21px 0}
 const state = {
   fullName:"",targetTitle:"",email:"",phone:"",location:"",linkedin:"",portfolio:"",
   summary:"",skills:"",certifications:"",achievements:"",
-  experience:[],education:[],projects:[],lastResumeText:"",optimizedText:""
+  experience:[],education:[],projects:[],lastResumeText:"",builderOptimizedText:"",checkerOptimizedText:"",builderPhoto:"",checkerPhoto:""
 };
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -413,7 +424,7 @@ function renderEntries(type){
   host.querySelectorAll("[data-entry]").forEach(card=>{
     card.querySelectorAll("[data-key]").forEach(input=>input.addEventListener("input",()=>{
       state[type][Number(card.dataset.index)][input.dataset.key]=input.value;
-      state.optimizedText="";
+      state.builderOptimizedText="";
       renderPreview();
     }));
     card.querySelector(".remove-entry").addEventListener("click",()=>{
@@ -428,7 +439,7 @@ function addEntry(type){
 ["experience","education","projects"].forEach(type=>$(type==="projects"?"add-project":`add-${type}`).addEventListener("click",e=>{e.preventDefault();addEntry(type);}));
 document.querySelectorAll("[data-field]").forEach(el=>el.addEventListener("input",()=>{
   state[el.dataset.field]=el.value;
-  state.optimizedText="";
+  state.builderOptimizedText="";
   renderPreview();
 }));
 function section(title,body){return body?`<section class="resume-section"><h2>${esc(title)}</h2>${body}</section>`:""}
@@ -441,7 +452,7 @@ function renderPreview(){
   const skills=lines(state.skills).join(" · ");
   const cert=lines(state.certifications).map(x=>`<p>${esc(x)}</p>`).join("");
   const ach=lines(state.achievements).map(x=>`<p>${esc(x)}</p>`).join("");
-  const html=`<h1>${esc(state.fullName||"Your Name")}</h1>${state.targetTitle?`<div class="resume-role">${esc(state.targetTitle)}</div>`:""}<div class="resume-contact">${contact||"Email · Phone · City · LinkedIn"}</div>
+  const html=`<div class="resume-header"><div class="resume-header-text"><h1>${esc(state.fullName||"Your Name")}</h1>${state.targetTitle?`<div class="resume-role">${esc(state.targetTitle)}</div>`:""}<div class="resume-contact">${contact||"Email · Phone · City · LinkedIn"}</div></div>${state.builderPhoto?`<img class="resume-header-photo" src="${esc(state.builderPhoto)}" alt="Profile photo">`:""}</div>
     ${section("Professional Summary",state.summary?`<p>${esc(state.summary)}</p>`:"")}
     ${section("Technical Skills",skills?`<p>${esc(skills)}</p>`:"")}
     ${section("Professional Experience",exp)}
@@ -473,13 +484,14 @@ function downloadFile(filename,content,type="text/plain"){
   const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
 }
 function downloadBuilderResume(formatId,button){
-  const text=cleanResumeForExport(state.optimizedText||resumeAsText());
+  const text=cleanResumeForExport(state.builderOptimizedText||resumeAsText());
   if(!text.trim()){toast("Add some resume details first.");return}
-  const isAiPolished=!!state.optimizedText;
-  return downloadResume(isAiPolished?"resume-ai-polished":"resume-ats-friendly",text,$(formatId).value,button);
+  const isAiPolished=!!state.builderOptimizedText;
+  return downloadResume(isAiPolished?"resume-ai-polished":"resume-ats-friendly",text,$(formatId).value,button,state.builderPhoto);
 }
 $("builder-export").addEventListener("click",e=>downloadBuilderResume("builder-export-format",e.currentTarget));
 $("sample-btn").addEventListener("click",()=>{
+  clearResumePhoto("builder");state.builderOptimizedText="";
   Object.assign(state,{fullName:"Jordan Lee",targetTitle:"Junior Data Analyst",email:"jordan.lee@email.com",phone:"+1 555 010 2468",location:"Austin, TX",linkedin:"linkedin.com/in/jordanlee",portfolio:"github.com/jordanlee",summary:"Entry-level data analyst with project experience using Python, SQL and Excel to clean datasets, explore trends and communicate findings. Interested in turning business questions into clear, actionable analysis.",skills:"Python, SQL, Excel, Power BI, data cleaning, data visualization, statistical analysis, communication",certifications:"Google Data Analytics Professional Certificate — Google — 2025",achievements:"Volunteer data coordinator, Campus Sustainability Club"});
   state.experience=[{role:"Data Intern",company:"Northstar Retail (Example)",location:"Austin, TX",dates:"Jun 2025 – Aug 2025",bullets:"Cleaned and validated weekly sales data using Excel and SQL.\nBuilt recurring reports for the operations team and documented data definitions."}];
   state.education=[{degree:"B.S. in Information Systems",school:"Example State University",location:"Austin, TX",dates:"2022 – 2026",details:"Relevant coursework: Statistics, Database Systems, Business Analytics"}];
@@ -487,6 +499,54 @@ $("sample-btn").addEventListener("click",()=>{
   ["fullName","targetTitle","email","phone","location","linkedin","portfolio","summary","skills","certifications","achievements"].forEach(k=>$(k).value=state[k]);
   ["experience","education","projects"].forEach(renderEntries);renderPreview();toast("Example loaded. Replace it with your own details.");
 });
+const photoRequest={builder:0,checker:0};
+function photoKey(prefix){return prefix==="builder"?"builderPhoto":"checkerPhoto"}
+function updatePhotoUi(prefix){
+  const data=state[photoKey(prefix)],thumb=$(prefix+"-photo-thumb");
+  if(data)thumb.src=data;else thumb.removeAttribute("src");
+  thumb.classList.toggle("hidden",!data);
+  $(prefix+"-photo-remove").classList.toggle("hidden",!data);
+  $(prefix+"-photo-status").textContent=data?"Photo added (PDF and DOCX)":"No photo selected";
+  if(prefix==="builder")renderPreview();
+}
+function clearResumePhoto(prefix){
+  photoRequest[prefix]++;
+  state[photoKey(prefix)]="";
+  $(prefix+"-photo-file").value="";
+  updatePhotoUi(prefix);
+}
+async function prepareResumePhoto(file){
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type))throw new Error("Choose a JPG, PNG or WebP photo.");
+  if(file.size>5*1024*1024)throw new Error("Photo must be 5 MB or smaller.");
+  const url=URL.createObjectURL(file);
+  try{
+    const img=new Image();
+    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error("This photo could not be read."));img.src=url});
+    const w=img.naturalWidth,h=img.naturalHeight;
+    if(!w||!h||w*h>40000000)throw new Error("Choose a smaller photo.");
+    const canvas=document.createElement("canvas");canvas.width=300;canvas.height=400;
+    const ctx=canvas.getContext("2d");
+    if(!ctx)throw new Error("Photo processing is unavailable in this browser.");
+    const cropW=Math.min(w,h*.75),cropH=Math.min(h,w/.75);
+    ctx.fillStyle="#ffffff";ctx.fillRect(0,0,300,400);
+    ctx.drawImage(img,(w-cropW)/2,(h-cropH)/2,cropW,cropH,0,0,300,400);
+    return canvas.toDataURL("image/jpeg",.88);
+  }finally{URL.revokeObjectURL(url)}
+}
+for(const prefix of ["builder","checker"]){
+  $(prefix+"-photo-file").addEventListener("change",async event=>{
+    const file=event.target.files[0];event.target.value="";
+    if(!file)return;
+    const request=++photoRequest[prefix];
+    try{
+      const data=await prepareResumePhoto(file);
+      if(request!==photoRequest[prefix])return;
+      state[photoKey(prefix)]=data;updatePhotoUi(prefix);
+    }catch(error){if(request===photoRequest[prefix])toast(error.message||"Could not load photo.")}
+  });
+  $(prefix+"-photo-remove").addEventListener("click",()=>clearResumePhoto(prefix));
+}
+
 /* ATS checker */
 async function loadScript(src,globalName){
   if(window[globalName])return;
@@ -790,7 +850,7 @@ function runAnalysis(){
 
 }
 $("analyze-btn").addEventListener("click",runAnalysis);
-$("clear-checker").addEventListener("click",()=>{$("resume-text").value="";$("job-description").value="";$("resume-file").value="";$("file-name").textContent="";$("check-results").classList.remove("show");($("optimized-panel")||{classList:{remove(){}}}).classList.remove("show");$("ai-check-panel").classList.remove("show");$("checker-ats-comparison").textContent="";$("score-after-ai-summary").textContent="";$("score-number").textContent="—";$("score-ring").style.setProperty("--score","0%");$("score-label").textContent="Awaiting resume";$("score-caption").textContent="Add a resume and run the check.";$("ai-check-output").textContent="";state.lastResumeText="";state.optimizedText="";toast("Checker cleared.")});
+$("clear-checker").addEventListener("click",()=>{$("resume-text").value="";$("job-description").value="";$("resume-file").value="";$("file-name").textContent="";$("check-results").classList.remove("show");($("optimized-panel")||{classList:{remove(){}}}).classList.remove("show");$("ai-check-panel").classList.remove("show");$("checker-ats-comparison").textContent="";$("score-after-ai-summary").textContent="";$("score-number").textContent="—";$("score-ring").style.setProperty("--score","0%");$("score-label").textContent="Awaiting resume";$("score-caption").textContent="Add a resume and run the check.";$("ai-check-output").textContent="";state.lastResumeText="";state.checkerOptimizedText="";clearResumePhoto("checker");toast("Checker cleared.")});
 function canonicalSection(line){
   const s=line.trim().replace(/[:：]+$/,"").toLowerCase();
   if(/^(professional )?(summary|profile|objective|career objective)$/.test(s))return "Professional Summary";
@@ -970,25 +1030,29 @@ function exportStructure(text){
 function pdfSafe(s){
   return s.replace(/[‘’‛]/g,"'").replace(/[“”]/g,'"').replace(/[–—−]/g,"-").replace(/[•●▪◦➤]/g,"-").replace(/…/g,"...").replace(/ /g," ").replace(/[^\x09\x0A\x0D\x20-\x7E -ÿ]/g,"");
 }
-async function exportPdf(filename,text){
+async function exportPdf(filename,text,photo=""){
   await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js","jspdf");
   const doc=new window.jspdf.jsPDF({unit:"pt",format:"letter"});
   const margin=54,pageW=doc.internal.pageSize.getWidth(),pageH=doc.internal.pageSize.getHeight(),maxW=pageW-margin*2;let y=margin;
-  const ensure=h=>{if(y+h>pageH-margin){doc.addPage();y=margin}};
+  const photoW=72,photoH=96;
+  if(photo)doc.addImage(photo,"JPEG",pageW-margin-photoW,margin,photoW,photoH);
+  let firstPage=true;
+  const ensure=h=>{if(y+h>pageH-margin){doc.addPage();y=margin;firstPage=false}};
+  const lineWidth=()=>photo&&firstPage&&y<margin+photoH+8?maxW-photoW-12:maxW;
   exportStructure(cleanResumeForExport(text)).forEach(b=>{
     const t=pdfSafe(b.text);
     if(b.kind==="blank"){y+=6;return}
-    if(b.kind==="title"){doc.setFont("helvetica","bold");doc.setFontSize(17);const w=doc.splitTextToSize(t,maxW);ensure(w.length*20);doc.text(w,margin,y+12);y+=w.length*20+2;return}
-    if(b.kind==="heading"){y+=6;ensure(24);doc.setFont("helvetica","bold");doc.setFontSize(11.5);doc.text(t.toUpperCase(),margin,y+10);y+=15;doc.setDrawColor(170);doc.setLineWidth(.6);doc.line(margin,y,pageW-margin,y);y+=8;return}
+    if(b.kind==="title"){doc.setFont("helvetica","bold");doc.setFontSize(17);const w=doc.splitTextToSize(t,lineWidth());ensure(w.length*20);doc.text(w,margin,y+12);y+=w.length*20+2;return}
+    if(b.kind==="heading"){if(photo&&firstPage&&y<margin+photoH+8)y=margin+photoH+8;y+=6;ensure(24);doc.setFont("helvetica","bold");doc.setFontSize(11.5);doc.text(t.toUpperCase(),margin,y+10);y+=15;doc.setDrawColor(170);doc.setLineWidth(.6);doc.line(margin,y,pageW-margin,y);y+=8;return}
     doc.setFont("helvetica","normal");doc.setFontSize(10.5);
-    const indent=b.kind==="bullet"?14:0;const w=doc.splitTextToSize(t,maxW-indent);
+    const indent=b.kind==="bullet"?14:0;const w=doc.splitTextToSize(t,lineWidth()-indent);
     w.forEach((line,i)=>{ensure(14);if(b.kind==="bullet"&&i===0)doc.text("-",margin+2,y+9);doc.text(line,margin+indent,y+9);y+=14});
     y+=1;
   });
   doc.save(filename);
 }
 function xmlEsc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"")}
-async function exportDocx(filename,text){
+async function exportDocx(filename,text,photo=""){
   await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js","JSZip");
   const run=(t,{bold=false,size=21}={})=>`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>${bold?"<w:b/>":""}<w:sz w:val="${size}"/></w:rPr><w:t xml:space="preserve">${xmlEsc(t)}</w:t></w:r>`;
   const body=exportStructure(cleanResumeForExport(text)).map(b=>{
@@ -999,20 +1063,25 @@ async function exportDocx(filename,text){
     return `<w:p><w:pPr><w:spacing w:after="60"/></w:pPr>${run(b.text)}</w:p>`;
   }).join("");
   const zip=new window.JSZip();
-  zip.file("[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+  if(photo){
+    zip.file("word/media/profile.jpg",photo.split(",")[1],{base64:true});
+    zip.file("word/_rels/document.xml.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdPhoto" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/profile.jpg"/></Relationships>');
+  }
+  zip.file("[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
   zip.file("_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
-  zip.file("word/document.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>`);
+  const photoParagraph=photo?"<w:p><w:pPr><w:jc w:val=\"right\"/><w:spacing w:after=\"80\"/></w:pPr><w:r><w:drawing><wp:inline distT=\"0\" distB=\"0\" distL=\"0\" distR=\"0\"><wp:extent cx=\"914400\" cy=\"1219200\"/><wp:docPr id=\"1\" name=\"Profile photo\" descr=\"Profile photo\"/><a:graphic><a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><pic:pic><pic:nvPicPr><pic:cNvPr id=\"0\" name=\"profile.jpg\"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed=\"rIdPhoto\"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"914400\" cy=\"1219200\"/></a:xfrm><a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>":"";
+  zip.file("word/document.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>${photoParagraph}${body}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>`);
   const blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
   const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-async function downloadResume(baseName,text,format,button){
+async function downloadResume(baseName,text,format,button,photo=""){
   if(!text||!text.trim()){toast("Nothing to download yet.");return}
   setButtonBusy(button,true,"Preparing…");
   try{
-    if(format==="pdf")await exportPdf(baseName+".pdf",text);
-    else if(format==="docx")await exportDocx(baseName+".docx",text);
+    if(format==="pdf")await exportPdf(baseName+".pdf",text,photo);
+    else if(format==="docx")await exportDocx(baseName+".docx",text,photo);
     else downloadFile(baseName+".txt",text);
-    toast("Downloaded "+baseName+"."+format);
+    toast("Downloaded "+baseName+"."+format+(format==="txt"&&photo?" (TXT does not include photos)":""));
   }catch(e){toast(e.message||"Could not create the file. Try TXT instead.")}
   finally{setButtonBusy(button,false)}
 }
@@ -1051,7 +1120,7 @@ $("ai-builder-btn").addEventListener("click",async()=>{
   const polished=cleanResumeForExport(data.resume||data.result||"");
   if(!polished.trim()){toast("AI did not return a usable resume.");return}
   renderAtsComparison("builder-ats-comparison",text,polished);
-  state.optimizedText=polished;
+  state.builderOptimizedText=polished;
   $("builder-ai-output").textContent=polished;
   $("builder-ai-meta").textContent="AI polished";
   $("builder-ai-panel").classList.remove("hidden");
@@ -1083,7 +1152,7 @@ $("ai-check-btn").addEventListener("click",async()=>{
     showReviewScoreSummary(comparison);
   }
   const analysis=data.analysis||"No separate AI analysis was returned.";
-  state.optimizedText=finalResume;
+  state.checkerOptimizedText=finalResume;
   $("ai-check-output").textContent=finalResume;
   $("ai-check-analysis").textContent=analysis;
   $("ai-check-meta").textContent="AI reviewed, improved and ATS-formatted"+(jd?" · Job description included":"");
@@ -1095,10 +1164,10 @@ $("ai-check-copy").addEventListener("click",async()=>{
   catch(e){toast("Clipboard unavailable. Select the text to copy.")}
 });
 $("final-download-btn").addEventListener("click",async e=>{
-  const text=cleanResumeForExport($("ai-check-output").textContent.trim()||state.optimizedText||"");
+  const text=cleanResumeForExport($("ai-check-output").textContent.trim()||state.checkerOptimizedText||"");
   if(!text){toast("Run AI Review • Improve • ATS Format first.");return}
-  state.optimizedText=text;
-  downloadResume("resumepilot-final-resume",text,$("final-download-format").value,e.currentTarget);
+  state.checkerOptimizedText=text;
+  downloadResume("resumepilot-final-resume",text,$("final-download-format").value,e.currentTarget,state.checkerPhoto);
 });
 
 
